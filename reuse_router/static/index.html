@@ -86,6 +86,7 @@ button, input, textarea { font: inherit; color: inherit; }
 .pill.replay .dot { background: var(--warning); }
 .pill.sim .dot { background: var(--critical); }
 .pill strong { color: var(--ink); font-weight: 600; }
+a.pill { text-decoration: none; color: var(--ink); }
 .sim-banner { border: 1px solid var(--border); border-left: 4px solid var(--critical); background: var(--surface); padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
 .sim-banner strong { color: var(--ink); }
 
@@ -271,6 +272,7 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
     <div class="right">
       <span id="mode" class="pill"><span class="dot"></span><span id="mode-text">…</span></span>
       <span class="pill">Synthetic data only</span>
+      <a class="pill" href="/">← Intro</a>
     </div>
   </header>
   <div id="sim-banner" class="sim-banner" hidden>

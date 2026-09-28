@@ -87,7 +87,13 @@ def _request(body: RouteBody) -> Request:
 
 
 @app.get("/")
-def index() -> FileResponse:
+def intro() -> FileResponse:
+    """Slides that set the scene, then hand off to the demo."""
+    return FileResponse(STATIC_DIR / "intro.html")
+
+
+@app.get("/app")
+def demo_app() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 

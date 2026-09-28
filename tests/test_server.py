@@ -19,7 +19,8 @@ def client(monkeypatch, tmp_path):
 
 
 def test_index_and_meta(client):
-    assert "SafeAI Marketplace" in client.get("/").text
+    assert "Start the demo" in client.get("/").text
+    assert "SafeAI Marketplace" in client.get("/app").text
     meta = client.get("/api/meta").json()
     assert len(meta["questions"]) == 11
     assert len(meta["examples"]) == len(server.EXAMPLES)

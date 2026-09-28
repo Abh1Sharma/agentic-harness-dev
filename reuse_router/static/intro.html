@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SafeAI Marketplace</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --raised: #ffffff;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --border: rgba(11, 11, 11, 0.10);
+  --accent: #2a78d6;
+  --good: #0ca30c;
+  --critical: #d03b3b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --raised: #222220; --ink: #ffffff; --ink-2: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --border: rgba(255, 255, 255, 0.10); --accent: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --raised: #222220; --ink: #ffffff; --ink-2: #c3c2b7;
+  --muted: #898781; --grid: #2c2c2a; --border: rgba(255, 255, 255, 0.10); --accent: #3987e5;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--page); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; overflow-x: hidden; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.slide { min-height: 100vh; min-height: 100dvh; display: none; flex-direction: column; justify-content: center; padding: 56px 16px 96px; }
+.slide.on { display: flex; }
+.inner { width: 100%; max-width: 1040px; margin: 0 auto; }
+.kicker { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; margin: 0 0 12px; }
+h1 { font-size: clamp(36px, 6vw, 64px); line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 16px; }
+h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.1; letter-spacing: -0.015em; margin: 0 0 24px; }
+.lede { font-size: clamp(18px, 2.2vw, 24px); color: var(--ink-2); margin: 0 0 24px; max-width: 760px; }
+.note { font-size: 14px; color: var(--muted); margin-top: 20px; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 820px) { .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; } .cols.three { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.card h3 { margin: 0 0 8px; font-size: 20px; }
+.card p { margin: 0; color: var(--ink-2); }
+.card ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
+.card li + li { margin-top: 6px; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; border: 1px solid var(--border); border-radius: 999px; padding: 2px 10px; margin-bottom: 10px; color: var(--ink-2); }
+.tag.ai::before { content: "● "; color: var(--accent); }
+.tag.noai::before { content: "● "; color: var(--good); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
+.chips span { border: 1px solid var(--border); background: var(--raised); border-radius: 999px; padding: 4px 12px; font-size: 15px; }
+
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; margin: 8px 0 24px; }
+.flow .box { flex: 1 1 150px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.flow .box b { display: block; margin-bottom: 4px; }
+.flow .box span { color: var(--ink-2); font-size: 14px; }
+.flow .box.hi { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.flow .arrow { align-self: center; color: var(--muted); font-size: 22px; }
+@media (max-width: 700px) { .flow .arrow { display: none; } }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; color: var(--ink); }
+.principle { font-size: clamp(22px, 3vw, 32px); font-weight: 650; letter-spacing: -0.01em; margin: 0 0 28px; }
+.principle span { color: var(--muted); font-weight: 400; }
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 10px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 18px; }
+.steps li::before { content: counter(s); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); font-size: 14px; font-weight: 600; background: var(--surface); }
+.steps li span { color: var(--ink-2); }
+.cta { display: inline-block; background: var(--ink); color: var(--page); text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 10px; }
+
+.nav { position: fixed; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; background: linear-gradient(transparent, var(--page) 40%); }
+.nav button, .nav a { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 6px 14px; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; text-decoration: none; }
+.nav button:disabled { opacity: 0.4; cursor: default; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--grid); }
+.dots i.on { background: var(--ink); }
+.nav .count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.nav .group { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 520px) { .dots { display: none; } }
+</style>
+</head>
+<body>
+
+<section class="slide" aria-label="Title">
+  <div class="inner">
+    <p class="kicker">AI Tools reuse · proof of concept</p>
+    <h1>SafeAI Marketplace</h1>
+    <p class="lede">Certify once. Reuse everywhere. Prove it any time.</p>
+    <p class="note">Synthetic data, an illustrative catalog and mocked Pantheon checks. Press → to begin.</p>
+  </div>
+</section>
+
+<section class="slide" aria-label="The problem">
+  <div class="inner">
+    <p class="kicker">The problem</p>
+    <h2>AI assets are multiplying. So is the regulatory surface.</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>What we're building</h3>
+        <div class="chips"><span>EMMA</span><span>Notetaker</span><span>Docvision</span><span>Every team's agents</span></div>
+        <p style="margin-top:14px">Every duplicate tool is one more thing to certify, document and monitor.</p>
+      </div>
+      <div class="card">
+        <h3>What supervisors expect</h3>
+        <ul>
+          <li>An inventory of every model, with a risk rating <span class="mono">OSFI E-23</span></li>
+          <li>Documentation and validation before use</li>
+          <li>Monitoring, including after the code changes</li>
+          <li>Oversight of third-party services <span class="mono">OSFI B-10</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" aria-label="What we have">
+  <div class="inner">
+    <p class="kicker">What the marketplace already has</p>
+    <h2>A certification backbone that doesn't use AI to judge AI.</h2>
+    <div class="flow">
+      <div class="box"><b>Publish</b><span>A team submits an AI repo or service</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="box"><b>Pantheon</b><span>Deterministic evaluation: repeatable, explainable</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="box"><b>SafeAI approved</b><span>Listed for reuse across the bank</span></div>
+    </div>
+    <div class="cols">
+      <div class="card"><h3>Gap 1 · Findability</h3><p>Teams can't tell that a certified asset already does what they need, so they rebuild it, and it has to be certified again.</p></div>
+      <div class="card"><h3>Gap 2 · Proof</h3><p>An approval is a status in a system. Other systems can't check it, and it doesn't notice when the code changes.</p></div>
+    </div>
+    <p class="note">The two gaps are our working hypothesis, to be checked with the marketplace's users.</p>
+  </div>
+</section>
+
+<section class="slide" aria-label="The idea">
+  <div class="inner">
+    <p class="kicker">The idea</p>
+    <h2>Two additions, one principle.</h2>
+    <p class="principle">AI reads <span>·</span> rules decide <span>·</span> people approve <span>·</span> evidence is automatic</p>
+    <div class="cols">
+      <div class="card">
+        <span class="tag ai">Uses Jev</span>
+        <h3>Discover</h3>
+        <p>Describe a need in plain English. Jev reads it; plain code decides whether to reuse, extend or build, and whether the asset is certified for your data.</p>
+      </div>
+      <div class="card">
+        <span class="tag noai">No AI, by design</span>
+        <h3>SafeAI Passport</h3>
+        <p>Every certified asset carries a signed certificate. Change one field and it fails verification. Change the code and it's suspended until re-certified.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" aria-label="What Jev is">
+  <div class="inner">
+    <p class="kicker">What Jev is, and isn't</p>
+    <h2>A decision model: text in, numbers out.</h2>
+    <div class="flow">
+      <div class="box"><b>Text</b><span>"Pull invoice fields from scanned PDFs for accounts payable"</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="box hi"><b>Jev · one call</b><span>Typed questions: yes/no, pick one, score 0–3</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="box"><b>Numbers</b><span class="mono">docvision 0.91 · fit 2.8/3 · client data 0.07</span><span> (illustrative)</span></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="box"><b>Plain code</b><span>Cutoffs owned by risk turn numbers into a verdict, with a trace</span></div>
+    </div>
+    <div class="cols">
+      <div class="card">
+        <h3>It is</h3>
+        <ul>
+          <li>Fast and cheap enough to sit in every workflow: we show the measured latency and cost on screen</li>
+          <li>Prose-free, so there's no invented text to review</li>
+          <li>Testable: every decision is scored against labelled examples</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>It isn't</h3>
+        <ul>
+          <li>A chatbot or a code writer</li>
+          <li>The certifier: Pantheon and people are</li>
+          <li>Approved for real data yet: that needs vendor and model risk review</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" aria-label="The demo">
+  <div class="inner">
+    <p class="kicker">The demo</p>
+    <h2>Follow one request through the marketplace.</h2>
+    <ol class="steps">
+      <li><div><b>Discover.</b> <span>"Pull invoice fields from scanned PDFs": reuse Docvision, already certified.</span></div></li>
+      <li><div><b>Compliance catch.</b> <span>EMMA for client emails: it's certified only up to confidential data, so a privacy review is required.</span></div></li>
+      <li><div><b>Passport.</b> <span>Verify Docvision's certificate: signature, expiry, code unchanged.</span></div></li>
+      <li><div><b>Tamper.</b> <span>Change "medium" risk to "low": the signature fails.</span></div></li>
+      <li><div><b>Change.</b> <span>A new commit lands: the passport is suspended until re-certified.</span></div></li>
+    </ol>
+    <a class="cta" href="/app">Start the demo →</a>
+  </div>
+</section>
+
+<nav class="nav" aria-label="Slides">
+  <button id="prev" type="button">← Back</button>
+  <div class="group"><div class="dots" id="dots" aria-hidden="true"></div><span class="count" id="count"></span></div>
+  <div class="group"><a href="/app">Skip to demo</a><button id="next" type="button">Next →</button></div>
+</nav>
+
+<script>
+"use strict";
+const slides = [...document.querySelectorAll(".slide")];
+const dots = document.getElementById("dots");
+slides.forEach(() => dots.append(document.createElement("i")));
+let index = 0;
+
+function show(i) {
+  index = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach((slide, n) => slide.classList.toggle("on", n === index));
+  [...dots.children].forEach((dot, n) => dot.classList.toggle("on", n === index));
+  document.getElementById("count").textContent = `${index + 1} / ${slides.length}`;
+  document.getElementById("prev").disabled = index === 0;
+  document.getElementById("next").disabled = index === slides.length - 1;
+  history.replaceState(null, "", `#${index + 1}`);
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("prev").addEventListener("click", () => show(index - 1));
+document.getElementById("next").addEventListener("click", () => show(index + 1));
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("input, textarea")) return;
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); show(index + 1); }
+  if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); show(index - 1); }
+  if (e.key === "Home") show(0);
+  if (e.key === "End") show(slides.length - 1);
+});
+show((parseInt(location.hash.slice(1), 10) || 1) - 1);
+</script>
+</body>
+</html>
