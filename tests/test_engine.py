@@ -97,3 +97,48 @@ def test_resolve_mode_defaults(monkeypatch, env, expected):
     for name, value in env.items():
         monkeypatch.setenv(name, value)
     assert resolve_mode() == expected
+
+
+def test_real_sdk_client_end_to_end_over_a_mock_network(tmp_path):
+    """The real TypeSafeClient, with only the network faked: checks the request we send and
+    that a response in the API's shape flows through the whole pipeline, then replays."""
+    import json
+
+    import httpx2
+    from typesafe_sdk import RetryPolicy, TypeSafeClient
+
+    from reuse_router.pipeline import route_request
+    from tests.helpers import POLICY
+
+    sent = {}
+
+    def api(request):
+        sent["path"], sent["body"] = request.url.path, json.loads(request.content)
+        answers = {}
+        for name, question in sent["body"]["questions"].items():
+            if question["type"] == "noul":
+                answers[name] = {"type": "noul", "noul": 0.9 if name.startswith("has_") else 0.05}
+            elif question["type"] == "choice":
+                labels = list(question["criteria"])
+                top = "webex_notes" if name == "catalog_match" else "internal"
+                answers[name] = {"type": "choice", "choice": top, "confidence": 0.9,
+                                 "probabilities": {label: 0.9 if label == top else 0.1 / (len(labels) - 1) for label in labels}}
+            else:
+                levels = {str(i): (0.9 if i == 3 else 0.1 / 3) for i in range(4)}
+                answers[name] = {"type": "score", "score": 2.8, "confidence": 0.9,
+                                 "legend": dict(zip(levels, question["criteria"])), "probabilities": levels}
+        return httpx2.Response(200, json={"model": "jev-1.13", "usage": {"input_tokens": 900, "output_tokens": 30},
+                                          "answers": answers})
+
+    client = TypeSafeClient(api_key="apikey_test", retry=RetryPolicy(max_retries=0),
+                            http_client=httpx2.Client(transport=httpx2.MockTransport(api)))
+    request = Request(title="Sprint notes", description="Summarize our WebEx sprint planning meetings.")
+    result = route_request(request, LiveEngine(recordings_dir=tmp_path, client=client), POLICY, audit_path=None)
+
+    assert sent["path"] == "/v1/systemone"
+    assert len(sent["body"]["questions"]) == 11
+    assert result.decision.verdict.status == "REUSE_EXISTING"
+    assert result.engine.model == "jev-1.13"
+
+    replayed = route_request(request, ReplayEngine(recordings_dir=tmp_path), POLICY, audit_path=None)
+    assert replayed.engine.answers == result.engine.answers
