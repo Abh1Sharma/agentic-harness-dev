@@ -111,8 +111,8 @@ def build_questions(catalog: tuple[Tool, ...] = CATALOG) -> dict[str, dict]:
         "spec_readiness": {
             "type": "score",
             "instructions": (
-                "How ready is this request to hand to a coding agent that must build it without asking "
-                "any follow-up questions?"
+                "How ready is this request to hand to a developer or coding agent who must build it "
+                "without asking any follow-up questions?"
             ),
             "criteria": [
                 "A vague idea: the goal or problem is unclear.",

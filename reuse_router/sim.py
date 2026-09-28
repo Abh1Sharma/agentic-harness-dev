@@ -17,6 +17,7 @@ TOOL_KEYWORDS = {
     "policy_qa": ["policy", "policies", "procedure", "handbook", "guideline"],
     "code_review": ["pull request", "code review", "repository", "repositories"],
     "translate": ["translat", "french", "bilingual"],
+    "docvision": ["docvision", "scanned", "invoice", "pdf", "form"],
 }
 EXTEND_CUES = ["extend", "add ", "also ", "integrat", "support for", "connect", "instead of", "slack", "teams chat"]
 ONBOARD_CUES = ["access to", "onboard", "set up", "get started", "already"]

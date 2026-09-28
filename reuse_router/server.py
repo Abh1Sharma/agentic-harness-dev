@@ -7,12 +7,13 @@
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
-from reuse_router import audit, evaluate
+from reuse_router import audit, evaluate, passport
 from reuse_router.catalog import CATALOG
 from reuse_router.engine import Engine, EngineError, make_engine, requested_model, resolve_mode
 from reuse_router.models import Request, answers_from_dict
@@ -101,7 +102,7 @@ def meta() -> dict:
         "policy_version": policy.version(),
         "cutoff_ranges": CUTOFF_RANGES,
         "questions": build_questions(),
-        "catalog": [tool.to_dict() for tool in CATALOG],
+        "catalog": [tool.listing() for tool in CATALOG],
         "examples": [
             {"label": label, **{k: eval_items[i][k] for k in ("title", "team", "description")}}
             for i, label in EXAMPLES
@@ -139,6 +140,28 @@ def eval_run() -> dict:
     report = evaluate.run(get_engine())
     RESULTS_PATH.write_text(json.dumps(report, indent=2))
     return {"available": True, **report}
+
+
+class VerifyBody(BaseModel):
+    passport: Any
+    current_commit: str | None = Field(default=None, max_length=64)
+
+
+@app.get("/api/passports")
+def passports() -> dict:
+    """Every listing with its passport and verification against the repo head we know."""
+    items = []
+    for tool in CATALOG:
+        issued = passport.issue(tool)
+        items.append({"listing": tool.listing(), "passport": issued,
+                      "verification": passport.verify(issued, current_commit=tool.commit)})
+    return {"public_key": passport.public_key_info(), "items": items}
+
+
+@app.post("/api/passports/verify")
+def verify_passport(body: VerifyBody) -> dict:
+    """Verify any passport JSON, including hand-edited ones from the tamper test."""
+    return passport.verify(body.passport, current_commit=body.current_commit)
 
 
 @app.get("/api/audit")

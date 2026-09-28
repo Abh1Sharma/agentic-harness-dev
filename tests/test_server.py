@@ -19,7 +19,7 @@ def client(monkeypatch, tmp_path):
 
 
 def test_index_and_meta(client):
-    assert "Reuse Router" in client.get("/").text
+    assert "SafeAI Marketplace" in client.get("/").text
     meta = client.get("/api/meta").json()
     assert len(meta["questions"]) == 11
     assert len(meta["examples"]) == len(server.EXAMPLES)
@@ -52,3 +52,19 @@ def test_eval_run_then_read(client):
     report = client.post("/api/eval/run").json()
     assert report["n"] == len(evaluate.load_eval_set())
     assert client.get("/api/eval").json()["ran_at"] == report["ran_at"]
+
+
+def test_passports_list_all_assets_as_valid(client):
+    data = client.get("/api/passports").json()
+    assert len(data["items"]) == len(server.CATALOG)
+    assert {item["verification"]["status"] for item in data["items"]} == {"VALID"}
+    assert data["public_key"]["algorithm"] == "Ed25519"
+
+
+def test_verify_detects_tampering_and_new_commits(client):
+    item = client.get("/api/passports").json()["items"][0]
+    edited = {**item["passport"], "payload": {**item["passport"]["payload"], "risk_tier": "low"}}
+    assert client.post("/api/passports/verify", json={"passport": edited}).json()["status"] == "TAMPERED"
+    moved = client.post("/api/passports/verify", json={"passport": item["passport"], "current_commit": "f" * 40})
+    assert moved.json()["status"] == "SUSPENDED"
+    assert client.post("/api/passports/verify", json={"passport": "not json"}).json()["status"] == "TAMPERED"

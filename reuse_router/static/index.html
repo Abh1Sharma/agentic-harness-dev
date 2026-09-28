@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reuse Router</title>
+<title>SafeAI Marketplace</title>
 <style>
 :root {
   color-scheme: light;
@@ -191,6 +191,43 @@ label.field textarea { resize: vertical; min-height: 110px; line-height: 1.45; }
 details.raw { margin-top: 12px; font-size: 13px; }
 details.raw pre { background: var(--raised); border: 1px solid var(--border); border-radius: 8px; padding: 10px; overflow: auto; max-height: 340px; font-size: 12px; }
 
+/* Passports */
+.pp-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 40px; }
+@media (min-width: 1000px) { .pp-grid { grid-template-columns: 320px minmax(0, 1fr); } }
+.assets { display: grid; gap: 8px; align-content: start; }
+.asset { text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; display: grid; gap: 2px; }
+.asset[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.asset .n { font-weight: 600; }
+.asset .m { font-size: 12px; color: var(--ink-2); }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink); }
+.badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.badge.VALID i { background: var(--good); }
+.badge.TAMPERED i { background: var(--critical); }
+.badge.SUSPENDED i, .badge.EXPIRED i { background: var(--warning); }
+.pp-steps { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.pp-steps li { display: grid; grid-template-columns: 22px 150px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.pp-steps .ic { font-weight: 700; }
+.pp-steps .ic.ok { color: var(--good); }
+.pp-steps .ic.bad { color: var(--critical); }
+.pp-steps .ic.skip { color: var(--muted); }
+.pp-steps .d { color: var(--ink-2); }
+.facts { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 12px; font-size: 13px; margin: 0; }
+.facts dt { color: var(--ink-2); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+.untrusted { font-size: 12px; font-weight: 600; margin-left: 6px; }
+.untrusted::before { content: "✗ "; color: var(--critical); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.checks li::before { content: "✓ "; color: var(--good); font-weight: 700; }
+.checks code { font-size: 11px; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.actions .primary { width: auto; padding: 7px 14px; }
+.actions .ghost { padding: 6px 12px; }
+textarea.json { display: block; width: 100%; min-height: 300px; margin-top: 12px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--axis); border-radius: 8px; background: var(--raised); color: var(--ink); padding: 10px; }
+.keybox { font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; margin-top: 12px; }
+.keybox b { color: var(--ink); font-size: 14px; }
+.safeai { margin-top: 8px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+@media (max-width: 700px) { .pp-steps li { grid-template-columns: 22px minmax(0, 1fr); } .pp-steps li .d { grid-column: 2; } .facts { grid-template-columns: minmax(0, 1fr); } }
+
 /* Eval */
 .toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 12px; }
 .toolbar .primary { width: auto; padding: 8px 16px; }
@@ -228,8 +265,8 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>Reuse Router</h1>
-      <p class="sub">Jev decides · code enforces · nothing generates</p>
+      <h1>SafeAI Marketplace</h1>
+      <p class="sub">Discover certified AI assets · verify their SafeAI Passport</p>
     </div>
     <div class="right">
       <span id="mode" class="pill"><span class="dot"></span><span id="mode-text">…</span></span>
@@ -240,7 +277,8 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
     <strong>Simulated mode.</strong> These numbers come from keyword rules, not Jev. Set <code>TYPESAFE_API_KEY</code> for live mode before recording or quoting anything.
   </div>
   <nav class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" data-tab="route">Route a request</button>
+    <button role="tab" aria-selected="true" data-tab="route">Discover</button>
+    <button role="tab" aria-selected="false" data-tab="passports">Passports</button>
     <button role="tab" aria-selected="false" data-tab="eval">Evaluation</button>
     <button role="tab" aria-selected="false" data-tab="audit">Audit log</button>
   </nav>
@@ -280,6 +318,16 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
       </div>
     </section>
 
+    <section id="tab-passports" hidden>
+      <div class="pp-grid">
+        <aside>
+          <div class="assets" id="assets"></div>
+          <div class="card keybox" id="keybox"></div>
+        </aside>
+        <div id="passport-detail"><p class="empty">Loading passports…</p></div>
+      </div>
+    </section>
+
     <section id="tab-eval" hidden>
       <div class="toolbar">
         <button id="run-eval" class="primary">Run eval</button>
@@ -297,7 +345,7 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
       <div id="audit-body" class="scroll"></div>
     </section>
   </main>
-  <footer>Demo only. Synthetic requests and an illustrative catalog; review controls are placeholders. See SPEC.md.</footer>
+  <footer>Proof of concept. Synthetic requests, an illustrative catalog, mocked Pantheon checks and placeholder review controls. See SPEC.md.</footer>
 </div>
 <div id="tooltip" class="tooltip" hidden></div>
 
@@ -361,7 +409,7 @@ const LABELS = {
   client_data: "Touches client personal information?",
   model_risk: "Used in decisions about clients, credit, pricing, fraud or reporting?",
   external_transfer: "Needs a service outside the approved environment?",
-  spec_readiness: "Ready for a coding agent?",
+  spec_readiness: "Ready to build without follow-up questions?",
   has_inputs: "Inputs and their source stated?",
   has_outputs: "Outputs and their format stated?",
   has_users: "Users stated?",
@@ -378,7 +426,7 @@ const CUTOFF_LABELS = {
 const STATUS = {
   READY_TO_BUILD: { icon: "✓", tone: "good", label: "Ready to build", text: "Nothing certified covers this, no blocking reviews, and the request is specific enough. The build brief below can go to any build team." },
   REUSE_EXISTING: { icon: "↺", tone: "good", label: "Reuse a certified asset", text: "A SafeAI-certified asset already covers this. No build, no new certification." },
-  NEEDS_CLARIFICATION: { icon: "?", tone: "warning", label: "Needs clarification", text: "Not specific enough for a coding agent yet. Answer the open questions in the spec." },
+  NEEDS_CLARIFICATION: { icon: "?", tone: "warning", label: "Needs clarification", text: "Not specific enough to build yet. Answer the open questions in the brief." },
   NEEDS_REVIEW: { icon: "!", tone: "critical", label: "Needs review", text: "A blocking review must finish before anything is built." },
 };
 const REVIEW_NAMES = { privacy: "Privacy", model_risk: "Model risk", third_party: "Third-party risk" };
@@ -413,12 +461,14 @@ async function init() {
   $("#run-eval").textContent = S.meta.mode === "live" ? "Run eval (live Jev calls)" : "Run eval";
   for (const tab of document.querySelectorAll("[role=tab]")) tab.addEventListener("click", () => selectTab(tab.dataset.tab));
   loadEval();
+  loadPassports().catch(() => {}); // for the SafeAI badge on Discover results
 }
 
 function selectTab(name) {
   for (const tab of document.querySelectorAll("[role=tab]")) tab.setAttribute("aria-selected", String(tab.dataset.tab === name));
-  for (const id of ["route", "eval", "audit"]) $(`#tab-${id}`).hidden = id !== name;
+  for (const id of ["route", "passports", "eval", "audit"]) $(`#tab-${id}`).hidden = id !== name;
   if (name === "audit") loadAudit();
+  if (name === "passports") loadPassports().catch((error) => fill($("#passport-detail"), h("p", { class: "error" }, String(error.message))));
 }
 
 function fillExample(example) {
@@ -524,6 +574,7 @@ function renderResult() {
       h("p", {}, status.text),
       h("div", { class: "route" }, h("b", {}, "Route: "), routeText,
         v.reviews.length ? ` · Reviews: ${v.reviews.map((x) => REVIEW_NAMES[x] + (v.blocking_reviews.includes(x) ? " (blocking)" : "")).join(", ")}` : " · No reviews"),
+      safeaiLine(v),
       S.whatIf ? h("span", { class: "whatif" }, "What-if: cutoffs changed after the decision · not logged") : null,
     ));
 
@@ -880,6 +931,133 @@ function rowsTable(rows) {
         h("td", {}, row.title),
         cell(row, "status"), cell(row, "route"), cell(row, "data_class"), cell(row, "reviews", reviews));
     })));
+}
+
+// ---------- passports ----------
+const PASSPORT_STATUS = {
+  VALID: { icon: "✓", tone: "good", label: "Valid" },
+  TAMPERED: { icon: "✗", tone: "critical", label: "Tampered" },
+  SUSPENDED: { icon: "!", tone: "warning", label: "Suspended" },
+  EXPIRED: { icon: "!", tone: "warning", label: "Expired" },
+};
+// Working copy of the selected passport: the text may be hand-edited, the commit simulated.
+const P = { data: null, selected: null, text: "", commit: null, result: null, editing: false };
+
+async function loadPassports() {
+  if (!P.data) {
+    P.data = await api("/api/passports");
+    renderKeybox();
+    selectAsset(P.data.items[0].listing.id);
+  }
+  return P.data;
+}
+
+const passportItem = (id) => P.data.items.find((item) => item.listing.id === id);
+const badge = (status) => h("span", { class: `badge ${status}` }, h("i"), PASSPORT_STATUS[status].label);
+
+function selectAsset(id) {
+  const item = passportItem(id);
+  Object.assign(P, { selected: id, text: JSON.stringify(item.passport, null, 2), commit: item.listing.commit,
+                     result: item.verification, editing: false });
+  renderAssets();
+  renderPassport();
+}
+
+function renderAssets() {
+  fill($("#assets"), P.data.items.map(({ listing, verification }) => {
+    const status = listing.id === P.selected ? P.result.status : verification.status;
+    return h("button", { class: "asset", type: "button", "aria-pressed": String(listing.id === P.selected), onclick: () => selectAsset(listing.id) },
+      h("span", { class: "n" }, listing.name),
+      h("span", { class: "m" }, `${listing.risk_tier} risk · certified up to ${listing.approved_up_to}`),
+      badge(status));
+  }));
+}
+
+function renderKeybox() {
+  const key = P.data.public_key;
+  fill($("#keybox"),
+    h("b", {}, "Verify anywhere"),
+    h("p", { style: "margin:4px 0 8px" }, "Any system holding this public key can check a passport itself, without calling the marketplace."),
+    h("div", {}, `Ed25519 · key id ${key.key_id}`),
+    h("code", {}, key.public_key),
+    key.demo_key ? h("p", { class: "error" }, "Demo signing key: public, fine for showing tamper detection, not for real trust. Set PASSPORT_SIGNING_KEY for a real key.") : null);
+}
+
+async function verifyWorking() {
+  let parsed;
+  try { parsed = JSON.parse(P.text); } catch { parsed = P.text; } // unparseable JSON verifies as tampered
+  P.result = await api("/api/passports/verify", { passport: parsed, current_commit: P.commit });
+  renderAssets();
+  renderPassport();
+}
+
+const randomCommit = () => Array.from(crypto.getRandomValues(new Uint8Array(20)), (b) => b.toString(16).padStart(2, "0")).join("");
+
+function renderPassport() {
+  const item = passportItem(P.selected);
+  const listing = item.listing;
+  const result = P.result;
+  const status = PASSPORT_STATUS[result.status];
+  let claimed = null;
+  try { claimed = JSON.parse(P.text).payload; } catch { /* shown as unreadable below */ }
+  const untrusted = result.status === "TAMPERED" ? h("span", { class: "untrusted" }, "untrusted") : null;
+
+  const stepIcon = (ok) => (ok === true ? ["✓", "ok"] : ok === false ? ["✗", "bad"] : ["–", "skip"]);
+  const steps = h("ul", { class: "pp-steps" }, result.steps.map((step) => {
+    const [icon, cls] = stepIcon(step.ok);
+    return h("li", {}, h("span", { class: `ic ${cls}` }, icon), h("b", {}, step.name), h("span", { class: "d" }, step.detail));
+  }));
+
+  const fact = (label, value) => [h("dt", {}, label), h("dd", {}, value ?? "—")];
+  const facts = claimed && typeof claimed === "object" ? h("dl", { class: "facts" },
+    fact("Passport", claimed.passport_id),
+    fact("Asset", claimed.asset && `${claimed.asset.name} v${claimed.asset.version}`),
+    fact("Owner", claimed.asset?.owner),
+    fact("Repo", claimed.asset?.repo),
+    fact("Certified commit", claimed.asset?.commit),
+    fact("Risk tier", claimed.risk_tier),
+    fact("Certified data", claimed.approved_data_up_to ? `up to ${claimed.approved_data_up_to}` : null),
+    fact("Evaluated by", claimed.evaluated_by),
+    fact("Approved by", claimed.approved_by),
+    fact("Issued / expires", `${claimed.issued_on} → ${claimed.expires_on}`),
+  ) : h("p", { class: "empty" }, "The passport text isn't readable JSON.");
+
+  const checks = claimed && Array.isArray(claimed.checks) ? h("ul", { class: "checks" }, claimed.checks.map((check) =>
+    h("li", {}, `${check.name} `, h("code", {}, `${check.suite} · evidence ${String(check.evidence_sha256).slice(0, 12)}`)))) : null;
+
+  const movedOn = P.commit !== listing.commit;
+  const actions = h("div", { class: "actions" },
+    h("button", { class: "primary", onclick: verifyWorking }, "Verify"),
+    h("button", { class: "ghost", onclick: () => { P.editing = !P.editing; renderPassport(); } }, P.editing ? "Hide JSON" : "Tamper test: edit JSON"),
+    h("button", { class: "ghost", onclick: () => { P.commit = randomCommit(); verifyWorking(); } }, "Simulate new commit"),
+    h("button", { class: "ghost", onclick: () => selectAsset(P.selected) }, "Reset"));
+  const editor = P.editing ? h("textarea", { class: "json", spellcheck: "false", "aria-label": "Passport JSON",
+    oninput: (e) => { P.text = e.target.value; } }, P.text) : null;
+
+  fill($("#passport-detail"),
+    h("div", { class: `status ${status.tone}` },
+      h("div", { class: "icon", "aria-hidden": "true" }, status.icon),
+      h("div", {},
+        h("h2", {}, `SafeAI Passport · ${status.label}`),
+        h("p", {}, result.summary),
+        h("div", { class: "route" }, h("b", {}, listing.name), ` · repo head ${P.commit.slice(0, 7)} `,
+          movedOn ? "(new commit, simulated)" : "(certified commit)"))),
+    h("div", { class: "card", style: "margin-top:12px" }, h("h2", {}, "Verification"), steps, actions, editor),
+    h("div", { class: "section-title" }, "Contents ", untrusted),
+    h("div", { class: "card" }, facts),
+    checks ? h("div", { class: "section-title" }, "Pantheon checks passed ", h("span", {}, "· mocked for this demo")) : null,
+    checks ? h("div", { class: "card" }, checks) : null,
+  );
+}
+
+function safeaiLine(v) {
+  const asset = v.matched_tool && v.route !== "BUILD" ? S.meta.catalog.find((t) => t.id === v.matched_tool) : null;
+  if (!asset) return null;
+  const item = P.data ? passportItem(asset.id) : null;
+  return h("div", { class: "safeai" },
+    h("b", {}, "SafeAI:"), `${asset.risk_tier} risk · certified up to ${asset.approved_up_to}`,
+    item ? badge(item.verification.status) : null,
+    h("button", { class: "ghost", onclick: async () => { selectTab("passports"); await loadPassports(); selectAsset(asset.id); } }, "View passport"));
 }
 
 // ---------- audit ----------

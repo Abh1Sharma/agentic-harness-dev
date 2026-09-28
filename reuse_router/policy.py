@@ -183,7 +183,7 @@ def evaluate(answers: Answers, policy: Policy) -> Verdict:
         because = "blocking review required: " + ", ".join(REVIEW_NAMES[r] for r in blocking_reviews)
     elif not ready:
         status = "NEEDS_CLARIFICATION"
-        because = "request is not specific enough for a coding agent yet"
+        because = "request is not specific enough to build yet"
     else:
         status = "READY_TO_BUILD"
         because = "no blocking reviews and the request is ready"
