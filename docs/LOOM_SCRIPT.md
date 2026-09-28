@@ -16,12 +16,12 @@ it certifies, and stop people rebuilding what's already certified.**
 - [ ] `rm data/audit.jsonl` for a clean audit tab (local only).
 - [ ] Browser zoom 110–125%, light mode, other tabs closed. Start on `/` (slide 1).
 
-| Metric (from the live eval) | Value |
+| Metric (live eval, jev-1.13.0, 28 Sep 2026) | Value |
 |---|---|
-| Route accuracy | ___ |
-| Review recall (bar 90%) | ___ |
-| Median latency | ___ ms |
-| Cost for all 25 calls | $___ |
+| Route accuracy | 88% |
+| Review recall (bar 90%) | 100% (0 missed; precision 72%, 7 false alarms) |
+| Median latency | 179 ms (max 530 ms) |
+| Cost for all 25 calls | $0.0018 |
 | Keyword-rules baseline (sim): route accuracy / review recall | 60% / 78% |
 
 ## Shot list
@@ -39,8 +39,8 @@ it certifies, and stop people rebuilding what's already certified.**
 **Say:** "Someone needs invoice fields pulled from scanned PDFs. Jev matches Docvision and scores it as covering the need, so the verdict is reuse: no build, no new certification. Here's its SafeAI status, and the measured time and cost of that decision."
 
 ### 2:10–2:50 · Discover: the compliance catch
-**Click** "Extend: French emails".
-**Say:** "Extending EMMA to client-service emails. Jev classifies the data as restricted, but EMMA is only certified up to confidential. So reuse isn't automatic: a privacy review is attached, and the trace shows the number behind every rule."
+**Click** "Catch: client letters".
+**Say:** "Translating outgoing client letters. Jev matches the Translation Service with full confidence and says reuse, but it also classifies client letters as restricted data, and that service is only certified up to confidential. So reuse isn't automatic: a privacy review is attached, and the trace shows the number behind every rule."
 Optional, if time allows: drag **Review probability** until the verdict flips, then **Reset**. "Cutoffs are plain code that risk owns, not a prompt."
 
 ### 2:50–4:20 · The Passport

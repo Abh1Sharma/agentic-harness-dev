@@ -1,0 +1,204 @@
+{
+  "key": "21f294312eb713469883e4db1fe9d53396542fb1d7f3ff15245f35debe470a5a",
+  "recorded_at": "2026-09-28T04:27:09+00:00",
+  "requested_model": "jev-latest",
+  "model": "jev-1.13.0",
+  "latency_ms": 492.7,
+  "input_tokens": 1732,
+  "output_tokens": 274,
+  "state": {
+    "request": {
+      "description": "Our internal events team handles long email threads with venues and colleagues. We want summaries of each thread with action items and deadlines, from our own mailboxes.",
+      "title": "Email thread summaries for events team",
+      "team": "Internal Events"
+    },
+    "catalog": [
+      {
+        "id": "emma",
+        "name": "EMMA (email analysis)",
+        "description": "Summarizes email threads in the user's own mailbox, extracts action items and deadlines, classifies the sender's intent, and drafts suggested replies for the user to edit before sending. English only.",
+        "approved_up_to": "confidential"
+      },
+      {
+        "id": "webex_notes",
+        "name": "Notetaker (WebEx)",
+        "description": "Transcribes WebEx meetings and produces a summary, the decisions made, and action items with owners, then posts the notes to the meeting's space. English only.",
+        "approved_up_to": "confidential"
+      },
+      {
+        "id": "docvision",
+        "name": "Docvision (document extraction)",
+        "description": "Extracts text, tables and key fields from scanned documents and PDFs, such as forms, invoices and statements, into structured data with a confidence score per field.",
+        "approved_up_to": "confidential"
+      },
+      {
+        "id": "policy_qa",
+        "name": "Policy Q&A",
+        "description": "Answers employees' questions about internal policies and procedures from an indexed document library, with citations to the source section.",
+        "approved_up_to": "internal"
+      },
+      {
+        "id": "code_review",
+        "name": "Code Review Assistant",
+        "description": "Reviews pull requests in internal repositories, flags likely bugs, security issues and style problems, and suggests fixes as review comments.",
+        "approved_up_to": "internal"
+      },
+      {
+        "id": "translate",
+        "name": "Translation Service",
+        "description": "Translates internal documents and messages between English and French.",
+        "approved_up_to": "confidential"
+      }
+    ]
+  },
+  "questions": {
+    "catalog_match": {
+      "type": "choice",
+      "instructions": "Which tool in the catalog best covers the core task of this request? Choose 'none' if no catalog tool performs the core task, even if one shares minor features.",
+      "criteria": {
+        "emma": "EMMA (email analysis): Summarizes email threads in the user's own mailbox, extracts action items and deadlines, classifies the sender's intent, and drafts suggested replies for the user to edit before sending. English only.",
+        "webex_notes": "Notetaker (WebEx): Transcribes WebEx meetings and produces a summary, the decisions made, and action items with owners, then posts the notes to the meeting's space. English only.",
+        "docvision": "Docvision (document extraction): Extracts text, tables and key fields from scanned documents and PDFs, such as forms, invoices and statements, into structured data with a confidence score per field.",
+        "policy_qa": "Policy Q&A: Answers employees' questions about internal policies and procedures from an indexed document library, with citations to the source section.",
+        "code_review": "Code Review Assistant: Reviews pull requests in internal repositories, flags likely bugs, security issues and style problems, and suggests fixes as review comments.",
+        "translate": "Translation Service: Translates internal documents and messages between English and French.",
+        "none": "No tool in the catalog performs the core task of this request."
+      }
+    },
+    "reuse_fit": {
+      "type": "score",
+      "instructions": "How much of this request is already covered by the best-matching tool in the catalog?",
+      "criteria": [
+        "Not covered: no catalog tool performs the core task.",
+        "Partly covered: a tool shares some building blocks, but the core task needs new development.",
+        "Mostly covered: a tool performs the core task, but the request needs an extension such as a new input source, language, output format or integration.",
+        "Fully covered: a tool already does exactly this; the requester only needs access or onboarding."
+      ]
+    },
+    "data_class": {
+      "type": "choice",
+      "instructions": "What is the most sensitive class of data this tool would need to read, store or produce?",
+      "criteria": {
+        "public": "Already published outside the bank, e.g. public website content or press releases.",
+        "internal": "Non-public business information with low impact if disclosed, e.g. internal wikis, meeting logistics, source code without secrets, internal policies.",
+        "confidential": "Sensitive business information, e.g. strategy, financial forecasts, employee records, vendor contracts, audit findings.",
+        "restricted": "Client personal or account information, credentials, or material non-public information, e.g. client names with account numbers, government IDs, balances, transactions, credit files."
+      }
+    },
+    "client_data": {
+      "type": "noul",
+      "instructions": "Will this tool read, store or produce personal information about the bank's clients, such as names, contact details, account numbers, balances, transactions or government IDs?"
+    },
+    "model_risk": {
+      "type": "noul",
+      "instructions": "Will this tool produce scores, predictions or recommendations that are used to make decisions about clients, credit, pricing, fraud, or financial reporting?"
+    },
+    "external_transfer": {
+      "type": "noul",
+      "instructions": "Does the request require sending data to, or relying on, a service outside the bank's approved internal environment, such as a public SaaS product, a third-party API or a personal account?"
+    },
+    "spec_readiness": {
+      "type": "score",
+      "instructions": "How ready is this request to hand to a developer or coding agent who must build it without asking any follow-up questions?",
+      "criteria": [
+        "A vague idea: the goal or problem is unclear.",
+        "The goal is clear, but the inputs, outputs or users are missing.",
+        "Goal, inputs, outputs and users are clear, but there are no testable acceptance criteria.",
+        "Goal, inputs, outputs, users and testable acceptance criteria are all stated."
+      ]
+    },
+    "has_inputs": {
+      "type": "noul",
+      "instructions": "Does the request say what data or inputs the tool works from, and where they come from?"
+    },
+    "has_outputs": {
+      "type": "noul",
+      "instructions": "Does the request say what the tool should produce, and in what form?"
+    },
+    "has_users": {
+      "type": "noul",
+      "instructions": "Does the request say who will use the tool or who receives its output?"
+    },
+    "has_acceptance": {
+      "type": "noul",
+      "instructions": "Does the request include testable acceptance criteria or a measurable definition of success?"
+    }
+  },
+  "answers": {
+    "catalog_match": {
+      "label": "emma",
+      "confidence": 1.0,
+      "probabilities": {
+        "translate": 0.0,
+        "policy_qa": 0.0,
+        "none": 0.0,
+        "docvision": 0.0,
+        "webex_notes": 0.0,
+        "code_review": 0.0,
+        "emma": 1.0
+      },
+      "type": "choice"
+    },
+    "reuse_fit": {
+      "score": 2.99,
+      "confidence": 0.99,
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.01,
+        "3": 0.99
+      },
+      "type": "score"
+    },
+    "data_class": {
+      "label": "confidential",
+      "confidence": 0.76,
+      "probabilities": {
+        "public": 0.0,
+        "confidential": 0.83,
+        "restricted": 0.0,
+        "internal": 0.17
+      },
+      "type": "choice"
+    },
+    "client_data": {
+      "p": 0.11,
+      "type": "noul"
+    },
+    "model_risk": {
+      "p": 0.04,
+      "type": "noul"
+    },
+    "external_transfer": {
+      "p": 0.05,
+      "type": "noul"
+    },
+    "spec_readiness": {
+      "score": 1.93,
+      "confidence": 0.93,
+      "probabilities": {
+        "0": 0.0,
+        "1": 0.07,
+        "2": 0.93,
+        "3": 0.0
+      },
+      "type": "score"
+    },
+    "has_inputs": {
+      "p": 0.9,
+      "type": "noul"
+    },
+    "has_outputs": {
+      "p": 0.86,
+      "type": "noul"
+    },
+    "has_users": {
+      "p": 0.94,
+      "type": "noul"
+    },
+    "has_acceptance": {
+      "p": 0.17,
+      "type": "noul"
+    }
+  }
+}

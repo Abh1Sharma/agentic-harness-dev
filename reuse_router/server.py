@@ -34,7 +34,7 @@ RESULTS_PATH = evaluate.RESULTS_PATH
 EXAMPLES = [
     ("e24", "Reuse: invoice extraction"),
     ("e02", "Reuse: meeting notes"),
-    ("e05", "Extend: French emails"),
+    ("e23", "Catch: client letters"),
     ("e09", "Blocked: credit model"),
     ("e11", "Blocked: ChatGPT"),
     ("e13", "Too vague"),
