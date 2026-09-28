@@ -19,7 +19,7 @@ it certifies, and stop people rebuilding what's already certified.**
 | Metric (live eval, jev-1.13.0, 28 Sep 2026) | Value |
 |---|---|
 | Route accuracy | 88% |
-| Review recall (bar 90%) | 100% (0 missed; precision 72%, 7 false alarms) |
+| Review recall (bar 90%) | 100% (0 missed) in both live runs; precision 69–72% (7–8 false alarms) |
 | Median latency | 179 ms (max 530 ms) |
 | Cost for all 25 calls | $0.0018 |
 | Keyword-rules baseline (sim): route accuracy / review recall | 60% / 78% |
