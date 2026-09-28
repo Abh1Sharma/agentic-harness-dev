@@ -1,6 +1,6 @@
 # Loom script: SafeAI Marketplace (~5 minutes)
 
-Audience: Saeed. His pressure: regulatory risk, and showing something new that fits the
+Audience: a senior leader focused on regulatory risk and on showing something new that fits the
 bank's architecture and innovation agenda. The message: **the marketplace can prove what
 it certifies, and stop people rebuilding what's already certified.**
 

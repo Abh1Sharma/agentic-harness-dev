@@ -32,9 +32,16 @@ button { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: 
 </form>
 <script>
 "use strict";
+const params = new URLSearchParams(location.search);
 // Only return to a path on this site, never an outside URL.
-const next = new URLSearchParams(location.search).get("next") || "/";
+const next = params.get("next") || "/";
 const target = next.startsWith("/") && !next.startsWith("//") ? next : "/";
+// One-click link: /login?password=... signs in, and the password leaves the address bar first.
+const shared = params.get("password");
+if (shared) {
+  params.delete("password");
+  history.replaceState(null, "", location.pathname + (params.size ? `?${params}` : ""));
+}
 document.getElementById("login").addEventListener("submit", async (event) => {
   event.preventDefault();
   const error = document.getElementById("error");
@@ -46,6 +53,10 @@ document.getElementById("login").addEventListener("submit", async (event) => {
   error.textContent = (await response.json().catch(() => ({}))).detail || "Sign-in failed.";
   error.hidden = false;
 });
+if (shared) {
+  document.getElementById("password").value = shared;
+  document.getElementById("login").requestSubmit();
+}
 </script>
 </body>
 </html>

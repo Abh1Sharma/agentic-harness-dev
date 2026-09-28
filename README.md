@@ -17,7 +17,20 @@ that Pantheon evaluates for SafeAI approval. It adds two pieces:
 > made up or mocked. Don't enter real RBC or client data: TypeSafe hasn't been through
 > vendor, model risk or data-residency review. See [SPEC.md](SPEC.md).
 
-**Live demo:** https://safeai-marketplace.vercel.app (password-protected)
+## Try it
+
+| | |
+|---|---|
+| **One-click demo** | [safeai-marketplace.vercel.app/login?password=safeai-bee6-deb4-fde0](https://safeai-marketplace.vercel.app/login?password=safeai-bee6-deb4-fde0) |
+| **Demo link** | https://safeai-marketplace.vercel.app |
+| **Password** | `safeai-bee6-deb4-fde0` |
+
+Six intro slides first (arrow keys), then **Start the demo**. Try the example buttons,
+drag a policy cutoff, then open **Passports** and run the tamper test.
+
+[![75-second demo: Discover, the compliance catch, and a SafeAI Passport going valid, tampered, then suspended](docs/media/demo-poster.png)](docs/media/safeai-marketplace-demo.mp4)
+
+▶ [Watch the 75-second demo](docs/media/safeai-marketplace-demo.mp4) (recorded on the live site with real Jev calls)
 
 **First live results** (jev-1.13.0, 25 labelled requests, three runs): 88% route accuracy, 100% review recall, 69–72% review precision, ~150–180 ms median per decision, $0.0018 for all 25 calls. Keyword-rules baseline: 60% route accuracy, 78% recall.
 
