@@ -119,7 +119,7 @@ Rules run in this order:
 
 | Review | Triggered when | Blocks handoff? |
 |---|---|---|
-| Privacy | `client_data` ≥ cutoff **or** `data_class` ∈ {confidential, restricted} | No — becomes a constraint in the spec |
+| Privacy | `client_data` ≥ cutoff **or** `data_class` ∈ {confidential, restricted} **or** the route reuses/extends a tool not approved for that data class | No — becomes a constraint in the spec |
 | Model risk | `model_risk` ≥ cutoff | Yes |
 | Third-party risk | `external_transfer` ≥ cutoff | Yes |
 
