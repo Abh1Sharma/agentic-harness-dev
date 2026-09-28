@@ -20,6 +20,7 @@ input { display: block; width: 100%; margin: 4px 0 14px; padding: 9px 10px; bord
 button { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: var(--ink); color: var(--page); font: inherit; font-weight: 600; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .error { color: var(--ink); border-left: 4px solid var(--critical); padding: 6px 10px; margin: 12px 0 0; font-size: 13px; }
+.request { margin: 14px 0 0; font-size: 13px; text-align: center; }
 </style>
 </head>
 <body>
@@ -29,6 +30,7 @@ button { width: 100%; padding: 10px; border: 0; border-radius: 8px; background: 
   <label>Password <input id="password" type="password" autocomplete="current-password" required autofocus></label>
   <button type="submit">Sign in</button>
   <p id="error" class="error" hidden></p>
+  <p class="request">No password? Message Abhi on Slack for access.</p>
 </form>
 <script>
 "use strict";
