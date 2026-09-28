@@ -5,9 +5,9 @@ from reuse_router.policy import Policy, evaluate
 from tests.helpers import POLICY, choice, make_answers, score
 
 
-def test_complete_low_risk_new_tool_is_ready_for_factory():
+def test_complete_low_risk_new_tool_is_ready_to_build():
     verdict = evaluate(make_answers(), POLICY)
-    assert (verdict.route, verdict.status, verdict.reviews) == ("BUILD", "READY_FOR_FACTORY", [])
+    assert (verdict.route, verdict.status, verdict.reviews) == ("BUILD", "READY_TO_BUILD", [])
 
 
 @pytest.mark.parametrize(("fit", "route"), [(2.5, "REUSE"), (2.49, "EXTEND"), (1.5, "EXTEND"), (1.49, "BUILD")])
@@ -37,7 +37,7 @@ def test_model_risk_blocks_handoff():
 def test_privacy_review_does_not_block():
     verdict = evaluate(make_answers(client_data=NoulAnswer(0.9)), POLICY)
     assert verdict.reviews == ["privacy"]
-    assert verdict.status == "READY_FOR_FACTORY"
+    assert verdict.status == "READY_TO_BUILD"
 
 
 def test_sensitive_data_class_alone_triggers_privacy():
@@ -72,7 +72,7 @@ def test_trace_shows_the_numbers_behind_each_rule():
 
 def test_lowering_a_cutoff_changes_the_verdict_without_new_answers():
     answers = make_answers(model_risk=NoulAnswer(0.4))
-    assert evaluate(answers, POLICY).status == "READY_FOR_FACTORY"
+    assert evaluate(answers, POLICY).status == "READY_TO_BUILD"
     assert evaluate(answers, POLICY.with_overrides({"review_min_p": 0.3})).status == "NEEDS_REVIEW"
 
 

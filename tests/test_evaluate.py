@@ -3,7 +3,7 @@ from reuse_router.sim import SimEngine
 from tests.helpers import POLICY
 
 
-def row(expected_reviews, predicted_reviews, status=("READY_FOR_FACTORY", "READY_FOR_FACTORY")):
+def row(expected_reviews, predicted_reviews, status=("READY_TO_BUILD", "READY_TO_BUILD")):
     base = {"route": "BUILD", "data_class": "internal"}
     return {
         "expected": {**base, "status": status[0], "reviews": expected_reviews},
@@ -28,7 +28,7 @@ def test_eval_set_labels_use_known_values():
     for item in load_eval_set():
         expected = item["expected"]
         assert expected["route"] in {"REUSE", "EXTEND", "BUILD"}
-        assert expected["status"] in {"REUSE_EXISTING", "NEEDS_REVIEW", "NEEDS_CLARIFICATION", "READY_FOR_FACTORY"}
+        assert expected["status"] in {"REUSE_EXISTING", "NEEDS_REVIEW", "NEEDS_CLARIFICATION", "READY_TO_BUILD"}
         assert expected["data_class"] in {"public", "internal", "confidential", "restricted"}
         assert set(expected["reviews"]) <= {"privacy", "model_risk", "third_party"}
 

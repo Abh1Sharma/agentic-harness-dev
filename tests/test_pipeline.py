@@ -11,8 +11,8 @@ REQUEST = Request(title="Inbox digest", description="Summarize my email inbox\n\
 def test_spec_quotes_the_request_verbatim_and_says_no_model_wrote_it():
     spec = decide(REQUEST, make_answers(), POLICY, model="jev-test").spec_markdown
     assert "> Summarize my email inbox\n>\n> every morning." in spec
-    assert "No text in this spec was written by a model" in spec
-    assert "READY_FOR_FACTORY" in spec
+    assert "No text in this brief was written by a model" in spec
+    assert "READY_TO_BUILD" in spec
 
 
 def test_spec_lists_open_questions_for_missing_elements():

@@ -273,7 +273,7 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
             <div class="steps">
               <div class="step"><b>1 · Jev decides</b>11 typed questions about the request, answered in one call. Numbers only, no prose.</div>
               <div class="step"><b>2 · Code enforces</b>Policy cutoffs turn those numbers into a route, reviews and a status, with a trace.</div>
-              <div class="step"><b>3 · Template hands off</b>A fixed template writes the Factory spec. No model writes any text.</div>
+              <div class="step"><b>3 · Template writes</b>A fixed template writes the build brief. No model writes any text.</div>
             </div>
           </div>
         </div>
@@ -376,8 +376,8 @@ const CUTOFF_LABELS = {
   element_min_p: "Element probability",
 };
 const STATUS = {
-  READY_FOR_FACTORY: { icon: "✓", tone: "good", label: "Ready for Factory", text: "No blocking reviews and the request is specific enough. The handoff spec below can go to Factory." },
-  REUSE_EXISTING: { icon: "↺", tone: "good", label: "Reuse an existing tool", text: "A catalog tool already covers this. No build needed." },
+  READY_TO_BUILD: { icon: "✓", tone: "good", label: "Ready to build", text: "Nothing certified covers this, no blocking reviews, and the request is specific enough. The build brief below can go to any build team." },
+  REUSE_EXISTING: { icon: "↺", tone: "good", label: "Reuse a certified asset", text: "A SafeAI-certified asset already covers this. No build, no new certification." },
   NEEDS_CLARIFICATION: { icon: "?", tone: "warning", label: "Needs clarification", text: "Not specific enough for a coding agent yet. Answer the open questions in the spec." },
   NEEDS_REVIEW: { icon: "!", tone: "critical", label: "Needs review", text: "A blocking review must finish before anything is built." },
 };
@@ -577,7 +577,7 @@ function renderResult() {
     h("div", { class: "section-title" }, "Readiness"), h("div", { class: "decisions" }, readiness),
     h("div", { class: "section-title" }, "Decision trace ", h("span", {}, "· what the policy code did, with the numbers")),
     h("div", { class: "card" }, trace),
-    h("div", { class: "card-head section-title" }, h("span", {}, "FACTORY HANDOFF SPEC ", h("span", {}, "· fixed template")),
+    h("div", { class: "card-head section-title" }, h("span", {}, "BUILD BRIEF ", h("span", {}, "· fixed template")),
       h("span", { class: "spec-actions" },
         h("button", { class: "ghost", onclick: copySpec }, "Copy"),
         h("button", { class: "ghost", onclick: downloadSpec }, "Download .md"))),
@@ -647,7 +647,7 @@ function copySpec() {
 
 function downloadSpec() {
   const blob = new Blob([S.result.spec_markdown], { type: "text/markdown" });
-  const link = h("a", { href: URL.createObjectURL(blob), download: "handoff-spec.md" });
+  const link = h("a", { href: URL.createObjectURL(blob), download: "build-brief.md" });
   link.click();
   URL.revokeObjectURL(link.href);
 }

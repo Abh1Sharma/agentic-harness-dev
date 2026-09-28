@@ -26,7 +26,8 @@ RESULTS_PATH = evaluate.RESULTS_PATH
 
 # Demo examples come from the eval set, so one live eval run makes all of them replayable.
 EXAMPLES = [
-    ("e02", "Reuse: sprint notes"),
+    ("e24", "Reuse: invoice extraction"),
+    ("e02", "Reuse: meeting notes"),
     ("e05", "Extend: French emails"),
     ("e09", "Blocked: credit model"),
     ("e11", "Blocked: ChatGPT"),

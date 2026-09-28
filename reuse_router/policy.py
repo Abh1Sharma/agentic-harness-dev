@@ -20,7 +20,7 @@ CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "policy.toml"
 CLASS_RANK = {name: rank for rank, name in enumerate(DATA_CLASSES)}
 
 Route = Literal["REUSE", "EXTEND", "BUILD"]
-Status = Literal["REUSE_EXISTING", "NEEDS_REVIEW", "NEEDS_CLARIFICATION", "READY_FOR_FACTORY"]
+Status = Literal["REUSE_EXISTING", "NEEDS_REVIEW", "NEEDS_CLARIFICATION", "READY_TO_BUILD"]
 REVIEW_NAMES = {"privacy": "Privacy", "model_risk": "Model risk", "third_party": "Third-party risk"}
 
 
@@ -185,7 +185,7 @@ def evaluate(answers: Answers, policy: Policy) -> Verdict:
         status = "NEEDS_CLARIFICATION"
         because = "request is not specific enough for a coding agent yet"
     else:
-        status = "READY_FOR_FACTORY"
+        status = "READY_TO_BUILD"
         because = "no blocking reviews and the request is ready"
     trace.append(TraceStep("Status", status, because))
 

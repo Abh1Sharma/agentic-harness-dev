@@ -1,4 +1,4 @@
-"""Fixed template for the Factory handoff spec (SPEC §7).
+"""Fixed template for the build brief (SPEC §7): what a build team or coding agent receives.
 
 Nothing here generates text: every line is either the requester's own words, verbatim,
 or a fixed sentence selected by the verdict. The controls are PLACEHOLDERS to be
@@ -11,10 +11,10 @@ from reuse_router.policy import REVIEW_NAMES, Verdict
 from reuse_router.questions import READINESS_ELEMENTS
 
 STATUS_HEADLINES = {
-    "READY_FOR_FACTORY": "Ready for Factory handoff",
+    "READY_TO_BUILD": "Ready to build: hand to a build team or coding agent",
     "NEEDS_CLARIFICATION": "Not ready: open questions below must be answered first",
     "NEEDS_REVIEW": "Blocked: required review must be completed before build",
-    "REUSE_EXISTING": "Reuse an existing tool: no build needed",
+    "REUSE_EXISTING": "Reuse a certified asset: no build needed",
 }
 ROUTE_SENTENCES = {
     "REUSE": "An existing catalog tool already covers this request. Request access and onboard.",
@@ -48,7 +48,7 @@ def _title(request: Request) -> str:
 def render(request: Request, verdict: Verdict, *, model: str, policy_version: str, request_hash: str) -> str:
     tool = get_tool(verdict.matched_tool) if verdict.matched_tool else None
     lines = [
-        f"# Handoff spec: {_title(request)}",
+        f"# Build brief: {_title(request)}",
         "",
         f"**Status:** {verdict.status} — {STATUS_HEADLINES[verdict.status]}",
         "",
@@ -89,7 +89,7 @@ def render(request: Request, verdict: Verdict, *, model: str, policy_version: st
     lines += ["", f"Readiness score: {verdict.readiness:.1f} / 3", ""]
 
     if verdict.missing_elements:
-        lines += ["## 5. Open questions", "", "_Answer these before handing to Factory._", ""]
+        lines += ["## 5. Open questions", "", "_Answer these before anyone builds it._", ""]
         lines += [f"{i}. {READINESS_ELEMENTS[name][1]}" for i, name in enumerate(verdict.missing_elements, 1)]
         lines.append("")
 
@@ -102,7 +102,7 @@ def render(request: Request, verdict: Verdict, *, model: str, policy_version: st
         f"| Policy version | `{policy_version}` |",
         f"| Request hash | `{request_hash[:16]}` |",
         "",
-        "_Generated from a fixed template. No text in this spec was written by a model._",
+        "_Generated from a fixed template. No text in this brief was written by a model._",
         "",
     ]
     return "\n".join(lines)

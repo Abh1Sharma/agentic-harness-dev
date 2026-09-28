@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from reuse_router import server
+from reuse_router import evaluate, server
 from reuse_router.sim import SimEngine
 
 REQUEST = {
@@ -50,5 +50,5 @@ def test_bad_input_is_rejected(client):
 def test_eval_run_then_read(client):
     assert client.get("/api/eval").json() == {"available": False}
     report = client.post("/api/eval/run").json()
-    assert report["n"] == 23
+    assert report["n"] == len(evaluate.load_eval_set())
     assert client.get("/api/eval").json()["ran_at"] == report["ran_at"]

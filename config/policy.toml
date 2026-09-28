@@ -14,7 +14,7 @@ extend_min_fit = 1.5
 review_min_p = 0.50
 # Data classes that trigger a privacy review on their own.
 sensitive_classes = ["confidential", "restricted"]
-# Reviews that must finish before a spec goes to Factory.
+# Reviews that must finish before anything is built.
 blocking = ["model_risk", "third_party"]
 
 [readiness]
