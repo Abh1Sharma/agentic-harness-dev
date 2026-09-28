@@ -9,3 +9,6 @@ __pycache__/
 # Generated at runtime
 data/audit.jsonl
 data/eval_results.json
+.vercel
+.env*
+!.env.example
