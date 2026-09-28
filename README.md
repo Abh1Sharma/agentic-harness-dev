@@ -17,6 +17,10 @@ that Pantheon evaluates for SafeAI approval. It adds two pieces:
 > made up or mocked. Don't enter real RBC or client data: TypeSafe hasn't been through
 > vendor, model risk or data-residency review. See [SPEC.md](SPEC.md).
 
+**Live demo:** https://safeai-marketplace.vercel.app (password-protected)
+
+**First live results** (jev-1.13.0, 25 labelled requests, three runs): 88% route accuracy, 100% review recall, 69–72% review precision, ~150–180 ms median per decision, $0.0018 for all 25 calls. Keyword-rules baseline: 60% route accuracy, 78% recall.
+
 Design: [SPEC.md](SPEC.md) · Recording guide: [docs/LOOM_SCRIPT.md](docs/LOOM_SCRIPT.md)
 
 ## Run it locally
@@ -55,9 +59,11 @@ uv run --env-file .env python -m reuse_router.evaluate --mode live
 
 5. Deploy. Visitors see a sign-in page, then the slides and demo.
 
+To redeploy from a checkout: `npx vercel deploy --prod` (with `VERCEL_TOKEN` set, add `--token "$VERCEL_TOKEN"`).
+
 The key lives only in Vercel's settings, never in the repo; everyone who signs in uses
 it through the server. On Vercel the audit log and eval results are temporary (`/tmp`).
-`vercel.json` and `api/index.py` haven't been deployed yet, so check the first build log.
+Deployed and verified end to end on 28 Sep 2026, including live Jev calls from Vercel.
 
 ## Engine modes
 
