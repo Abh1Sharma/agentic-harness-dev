@@ -1,82 +1,88 @@
-# Reuse Router
+# SafeAI Marketplace POC
 
-A demo of **Jev** (TypeSafe AI) as a cheap, auditable decision layer in front of
-spec-driven development with Factory.
+A proof of concept for the AI Marketplace, where teams publish AI repos and services
+that Pantheon evaluates for SafeAI approval. It adds two pieces:
 
-A developer describes an internal AI tool they want. In under a second the router
-decides whether to **reuse**, **extend** or **build**, which **reviews** the request
-triggers, and whether it's specific enough to hand to a coding agent. If it is, it
-writes a Factory handoff spec from a fixed template.
+- **Discover** (uses Jev): describe a need in plain English. Jev answers 11 typed
+  questions in one call; plain code decides whether a **certified asset** can be reused
+  or extended, whether it's certified for your data, which reviews apply, and whether
+  a new build is specified well enough. Nothing is generated.
+- **SafeAI Passport** (no AI): every certified asset carries an Ed25519-signed
+  certificate. Change one field and it fails verification. Change the code and it's
+  suspended until re-certified.
 
-**Jev decides, code enforces, nothing generates.** Jev answers 11 typed questions
-in one call and returns numbers only. Plain Python applies the cutoffs and records
-why. A fixed template writes the spec. No model writes any text.
+**AI reads, rules decide, people approve, evidence is automatic.**
 
-> **Synthetic data only.** All requests, catalog entries and labels are made up.
-> Do not paste real RBC or client data: no vendor, model risk or data-residency
-> review of TypeSafe has been done. See [SPEC.md §10](SPEC.md#10-compliance-and-risk).
+> **Synthetic data only.** Requests, catalog details, labels and Pantheon checks are
+> made up or mocked. Don't enter real RBC or client data: TypeSafe hasn't been through
+> vendor, model risk or data-residency review. See [SPEC.md](SPEC.md).
 
-Full design: [SPEC.md](SPEC.md) · Recording guide: [docs/LOOM_SCRIPT.md](docs/LOOM_SCRIPT.md)
+Design: [SPEC.md](SPEC.md) · Recording guide: [docs/LOOM_SCRIPT.md](docs/LOOM_SCRIPT.md)
 
-## Quick start
+## Run it locally
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
-cp .env.example .env        # then put your key in .env: TYPESAFE_API_KEY=...
+echo "TYPESAFE_API_KEY=your-key-here" > .env
 uv run --env-file .env python -m reuse_router.server
 ```
 
-Open <http://127.0.0.1:8000>. The header shows the mode: **Live** means real Jev calls.
+Open <http://127.0.0.1:8000>: intro slides first, then **Start the demo** (`/app`).
+The header should say **Live**. Without a key it runs in **Simulated** mode (keyword
+rules, clearly bannered), which is enough to click around but says nothing about Jev.
 
-Without a key the app runs in **Simulated** mode (keyword rules, clearly bannered),
-which is enough to explore the UI but says nothing about Jev.
-
-## Before you demo
+Score the system against the 25 labelled requests (also records every Jev response so
+the demo can be replayed offline with `JEV_MODE=replay`):
 
 ```bash
 uv run --env-file .env python -m reuse_router.evaluate --mode live
 ```
 
-This runs all 23 labelled requests through Jev (23 calls, a fraction of a cent),
-prints accuracy and review recall, and writes `data/eval_results.json` for the
-Evaluation tab. It also **records** every response, so the demo examples work in
-replay mode afterwards:
+## Deploy to Vercel (password-protected)
 
-```bash
-JEV_MODE=replay uv run python -m reuse_router.server   # no network needed
-```
+1. Push this repo to GitHub.
+2. Generate a passport signing key: `uv run python -m reuse_router.passport keygen`
+3. On vercel.com: **Add New → Project**, import the repo, framework preset **Other**.
+4. Under **Environment Variables** add:
 
-Use replay if the network you record on blocks `api.typesafe.ai`. Replay only serves
-requests previously run live with identical text.
+   | Name | Value |
+   |---|---|
+   | `TYPESAFE_API_KEY` | your TypeSafe key |
+   | `DEMO_PASSWORD` | the password you'll give viewers |
+   | `PASSPORT_SIGNING_KEY` | the value from step 2 |
+
+5. Deploy. Visitors see a sign-in page, then the slides and demo.
+
+The key lives only in Vercel's settings, never in the repo; everyone who signs in uses
+it through the server. On Vercel the audit log and eval results are temporary (`/tmp`).
+`vercel.json` and `api/index.py` haven't been deployed yet, so check the first build log.
 
 ## Engine modes
 
 | `JEV_MODE` | What it does | Use for |
 |---|---|---|
-| `live` | Calls Jev; records each response to `data/recordings/` | Recording the demo, real evals |
-| `replay` | Serves recorded responses; refuses anything unseen | Demoing offline |
-| `sim` | Keyword rules, **not a model** | Tests and UI development |
+| `live` | Calls Jev; records each response | Real demos and evals |
+| `replay` | Serves recorded responses; refuses anything unseen | Offline demos |
+| `sim` | Keyword rules, **not a model** | Tests and UI work |
 
-Default: `live` if `TYPESAFE_API_KEY` is set, otherwise `sim`. Pin a model version with
-`TYPESAFE_DEFAULT_MODEL=jev-1.13`.
+Default: `live` if `TYPESAFE_API_KEY` is set, otherwise `sim`.
 
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `SPEC.md` | The design: problem, decision contract, policy, eval plan, risks |
-| `reuse_router/questions.py` | The decision contract: the 11 typed questions Jev answers |
-| `reuse_router/catalog.py` | The AI tools catalog (illustrative: replace with the real one) |
-| `config/policy.toml` | Policy cutoffs, as data. Change these, not code, to tune decisions |
+| `reuse_router/catalog.py` | Marketplace listings with certification metadata (illustrative) |
+| `reuse_router/questions.py` | The 11 typed questions Jev answers |
+| `config/policy.toml` | Policy cutoffs, as data. Tune these, not code |
 | `reuse_router/policy.py` | Pure function: answers + cutoffs → verdict + trace |
-| `reuse_router/spec_template.py` | Fixed Factory handoff template |
+| `reuse_router/passport.py` | Issue and verify SafeAI Passports; `keygen` |
 | `reuse_router/engine.py` | The only module that imports the TypeSafe SDK |
-| `reuse_router/sim.py` | Offline stand-in for tests (not a model) |
-| `reuse_router/pipeline.py` | Wires request → Jev → policy → template → audit log |
 | `reuse_router/evaluate.py` | Scores the system against `data/eval_set.jsonl`; cutoff sweep |
-| `reuse_router/server.py`, `static/index.html` | Demo server and page (no build step, no CDN) |
+| `reuse_router/server.py` | Thin FastAPI layer, password gate |
+| `reuse_router/static/` | `intro.html` slides, `index.html` demo, `login.html` |
+| `api/index.py`, `vercel.json` | Vercel entry point and routing |
 
 ## Tests
 
@@ -84,25 +90,13 @@ Default: `live` if `TYPESAFE_API_KEY` is set, otherwise `sim`. Pin a model versi
 uv run pytest
 ```
 
-Tests run fully offline. They include a check that the decision contract is accepted
-by the API's own request schema, and a record → replay round trip through the live
-engine with a fake client.
+Fully offline: the decision contract against the API's schema, a real-SDK round trip
+over a mock network, policy boundaries, passport tampering and suspension, and the
+password gate.
 
 ## Adapting it
 
-1. **Catalog**: replace the entries in `reuse_router/catalog.py` with the real tools.
-2. **Labels**: review `data/eval_set.jsonl`. The labels encode policy judgments
-   (e.g. "client-service email is restricted data"), so the owners of that policy
-   should agree with them.
-3. **Controls**: replace the placeholder controls in `reuse_router/spec_template.py`
-   with the actual requirements of each review.
-4. **Cutoffs**: run the eval live, read the sweep chart, set `config/policy.toml`.
-
-## Security
-
-- The API key is read from the `TYPESAFE_API_KEY` environment variable only. `.env` is
-  git-ignored. Never commit a key or paste one into chat or tickets.
-- The audit log (`data/audit.jsonl`, git-ignored) stores a hash of each request, not
-  its text.
-- Recordings in `data/recordings/` contain the request text and Jev's answers. They are
-  safe to commit only because the data is synthetic.
+1. **Catalog:** replace `reuse_router/catalog.py` with the real listings and metadata.
+2. **Pantheon:** swap the mocked checks in `passport.py` for Pantheon's real results.
+3. **Labels:** have the policy owners review `data/eval_set.jsonl`.
+4. **Cutoffs:** run the eval live, read the sweep chart, set `config/policy.toml`.

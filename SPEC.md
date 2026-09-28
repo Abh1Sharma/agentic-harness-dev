@@ -1,7 +1,13 @@
-# Reuse Router — Spec
+# SafeAI Marketplace POC — Spec
 
-A demo of Jev (TypeSafe AI) as a cheap, auditable **decision layer** in front of
-spec-driven development with Factory.
+A proof of concept for the AI Marketplace, where teams publish AI repos and services
+that Pantheon evaluates for SafeAI approval. It adds two things:
+
+- **Discover** (§1–§9): Jev reads a plain-English need and plain code decides whether
+  a certified asset can be reused or extended, or something new must be built.
+- **SafeAI Passport** (§12): a signed, tamper-evident certificate for each asset. No AI.
+
+**Principle: AI reads, rules decide, people approve, evidence is automatic.**
 
 > **Synthetic data only.** Every request, catalog entry and label in this repo is
 > made up. No RBC or client data is used or should be used with this demo.
@@ -13,12 +19,12 @@ spec-driven development with Factory.
 A developer who wants a new internal AI tool has to answer a chain of questions
 before anyone writes code:
 
-- Does something in the AI tools catalog already do this (Emma, the WebEx note
-  taker, …)? Should we reuse it, extend it, or build new?
+- Does a SafeAI-certified asset in the marketplace already do this (EMMA, Notetaker,
+  Docvision, …)? Should we reuse it, extend it, or build new?
 - What class of data will it touch? Which reviews does that trigger (privacy,
   model risk, third-party risk)?
-- Is the request specific enough to hand to a coding agent like Factory, or will
-  the agent guess?
+- Is the request specific enough to build, or will the builder (a team or a coding
+  agent) have to guess?
 
 Today these get answered ad hoc — in meetings, by whoever is available, or by
 asking a general-purpose LLM that replies in prose. Prose is slow, costs more,
@@ -27,12 +33,12 @@ varies run to run, and is hard to audit or test.
 ## 2. Goal
 
 Turn each of those questions into a **typed decision** made by Jev, enforce the
-consequences in **plain code**, and hand a spec to Factory **only when the
-request is ready**.
+consequences in **plain code**, and produce a build brief **only when the request is
+ready**. Reusing a certified asset avoids a new build *and* a new certification.
 
 **Non-goals**
 
-- Writing code. That stays Factory's job.
+- Writing code. The build brief can go to any team or coding agent (e.g. Factory).
 - Replacing human review. The router says *which* reviews are needed; people do them.
 - Handling real data. See §10.
 
@@ -43,7 +49,8 @@ request is ready**.
    - the route: **reuse**, **extend**, or **build**, and which catalog tool matched;
    - required reviews and the data class;
    - a readiness checklist;
-   - either a **Factory handoff spec** or the **open questions** blocking one.
+   - the matched asset's SafeAI Passport status, with a link to verify it;
+   - either a **build brief** or the **open questions** blocking one.
 3. A reviewer can drag the policy cutoffs and watch the verdict change instantly,
    without calling Jev again.
 
@@ -129,7 +136,7 @@ Rules run in this order:
 2. Any blocking review → **NEEDS_REVIEW**.
 3. `spec_readiness` < `ready_min_score` or any `has_*` below cutoff → **NEEDS_CLARIFICATION**
    (with one open question per missing element).
-4. Otherwise → **READY_FOR_FACTORY**.
+4. Otherwise → **READY_TO_BUILD**.
 
 Starting cutoffs (to be tuned with the eval in §9):
 
@@ -147,7 +154,7 @@ Starting cutoffs (to be tuned with the eval in §9):
 **Verdict** — route, matched tool, status, reviews, data class, open questions,
 warnings (e.g. low-confidence match), and the trace of every rule that fired.
 
-**Factory handoff spec** — Markdown built from a fixed template, no text generation:
+**Build brief** — Markdown built from a fixed template, no text generation:
 
 1. Problem statement (the request, verbatim)
 2. Routing decision (route, matched tool, reuse fit)
@@ -184,7 +191,7 @@ Mode is set by `JEV_MODE`. Default: `live` if `TYPESAFE_API_KEY` is set, otherwi
   vendor risk, model risk (OSFI E-23) or data-residency review has been done.
 - **Secrets**: the API key is read from the `TYPESAFE_API_KEY` environment variable only;
   `.env` is git-ignored.
-- **Audit log** (`data/audit.jsonl`) stores a hash of the request, not its text, plus
+- **Audit log** (`audit.jsonl` in the runtime directory) stores a hash of the request, not its text, plus
   every answer, the cutoffs used and the verdict.
 - **Vendor figures** (speed, cost) are not quoted; the demo shows latency and token
   counts measured on each call.
@@ -194,5 +201,47 @@ Mode is set by `JEV_MODE`. Default: `live` if `TYPESAFE_API_KEY` is set, otherwi
 1. Where does the real AI tools catalog live, and who maintains it?
 2. What are RBC's actual data classification levels? (§5 uses a generic four-level scheme.)
 3. Who owns the cutoffs: engineering, or compliance?
-4. How should a handoff reach Factory: a file in the repo, a ticket, or an API call?
+4. How should a build brief reach the builder: a ticket, a repo file, or an API call?
 5. Which controls does each review actually require? (The template's controls are placeholders.)
+6. What does Pantheon actually check, and in what form are its results? (§12 mocks them.)
+7. Who holds the passport signing key, and who may issue or revoke passports?
+
+## 12. SafeAI Passport
+
+A signed certificate for each certified asset, in `reuse_router/passport.py`. No AI, by
+design: proof should be plain cryptography a risk team can reason about.
+
+**Contents** (`safeai-passport/v0`): asset id, name, version, owner, repo, the certified
+commit, risk tier, the most sensitive data class it's certified for, each Pantheon check
+with its suite version, result and an evidence hash, who evaluated and approved it, and
+issue and expiry dates (one year).
+
+**Signing.** Ed25519 over canonical JSON (sorted keys, no whitespace). Only the
+marketplace holds the private key (`PASSPORT_SIGNING_KEY`); any system with the public
+key can verify a passport without calling the marketplace. Signing is deterministic, so
+passports are recomputed from the catalog on demand and the POC needs no database.
+Without a configured key the app uses a public demo key and labels it on screen.
+
+**Verification**, in order (first failure decides the status):
+
+| Status | Meaning |
+|---|---|
+| `TAMPERED` | The signature doesn't match the content, or the passport is malformed. Nothing else is checked. |
+| `EXPIRED` | Past its expiry date: re-certification required. |
+| `SUSPENDED` | The repo has moved past the certified commit: re-certify before reuse. |
+| `VALID` | Issued by this marketplace, unaltered, in date, and matching the certified code. |
+
+**Mocked in this POC:** the Pantheon checks and their evidence hashes, the approver, and
+the repo head (the demo's "simulate new commit" button stands in for a webhook).
+
+## 13. Deployment and access
+
+- **Local:** `uv run python -m reuse_router.server`, no password.
+- **Vercel:** `api/index.py` serves the same app; `vercel.json` routes every path to it.
+  Secrets are Vercel environment variables: `TYPESAFE_API_KEY`, `DEMO_PASSWORD`,
+  `PASSPORT_SIGNING_KEY`.
+- **Password gate:** when `DEMO_PASSWORD` is set, every page and API route requires
+  signing in. The cookie holds a token derived from the password, never the password.
+- **Runtime files** (audit log, eval results, live recordings) go to `/tmp` on Vercel and
+  do not persist between instances. The committed eval set and recordings are read-only.
+- **Routes:** `/` intro slides, `/app` the demo, `/login` sign-in.

@@ -1,101 +1,61 @@
-# Loom script: Reuse Router (~5 minutes)
+# Loom script: SafeAI Marketplace (~5 minutes)
 
-Audience: senior director. Goal: show that Jev makes the decisions before a build
-**cheap, fast and auditable**, and that it fits alongside Factory rather than replacing it.
+Audience: Saeed. His pressure: regulatory risk, and showing something new that fits the
+bank's architecture and innovation agenda. The message: **the marketplace can prove what
+it certifies, and stop people rebuilding what's already certified.**
 
 ## Before you record
 
-- [ ] Header shows **Live · jev-latest**, not Simulated. Never record in sim mode.
-- [ ] Run the live eval first: `uv run --env-file .env python -m reuse_router.evaluate --mode live`.
-      Fill in the numbers table below from its output. **Use your numbers, not guesses.**
-- [ ] Run each example chip once and check the outcome. If Jev routes an example
-      differently from what the script expects, either adjust the script to what it
-      actually does, or pick another example. Don't hide a miss; the eval tab shows them anyway.
-- [ ] Clear the audit log for a tidy Audit tab: `rm data/audit.jsonl`.
-- [ ] Browser zoom 110–125%, light mode, other tabs closed. Have SPEC.md open in a second tab.
-- [ ] If the recording network blocks `api.typesafe.ai`: record the eval live elsewhere,
-      then run with `JEV_MODE=replay` and say "replaying recorded Jev responses" on camera.
+- [ ] Header on `/app` shows **Live · jev-latest**, not Simulated. Never record in sim mode.
+- [ ] Run the live eval: `uv run --env-file .env python -m reuse_router.evaluate --mode live`.
+      Fill in the table below from its output.
+- [ ] Click each demo button once. If Jev routes one differently from this script, follow
+      what it actually does or skip that button. Don't hide a miss.
+- [ ] If recording from Vercel: set `PASSPORT_SIGNING_KEY` so the Passports tab doesn't
+      show the demo-key warning.
+- [ ] `rm data/audit.jsonl` for a clean audit tab (local only).
+- [ ] Browser zoom 110–125%, light mode, other tabs closed. Start on `/` (slide 1).
 
-**Your numbers (from the live eval):**
-
-| Metric | Value |
+| Metric (from the live eval) | Value |
 |---|---|
-| Review recall (bar 90%) | ___ |
-| Review precision | ___ |
-| Status accuracy | ___ |
 | Route accuracy | ___ |
+| Review recall (bar 90%) | ___ |
 | Median latency | ___ ms |
-| Cost for all 23 calls | $___ |
-| Keyword-rules baseline route accuracy (sim) | 61% |
+| Cost for all 25 calls | $___ |
+| Keyword-rules baseline (sim): route accuracy / review recall | 60% / 78% |
 
 ## Shot list
 
-### 0:00–0:30 · The problem
-**Show:** the empty page with "How it works".
-**Say:** "Every request for a new internal AI tool hits the same questions before
-anyone writes code: does Emma or the note taker already do this? What data does it
-touch, and which reviews does that trigger? Is it specified well enough to hand to
-Factory? Today that's meetings, or an LLM writing paragraphs nobody can audit. This
-turns each question into a typed decision in under a second."
+### 0:00–1:30 · Slides (about 15 seconds each)
+1. **Title.** "This is a proof of concept for the AI Marketplace: certify once, reuse everywhere, prove it any time."
+2. **Problem.** "We're building more AI assets every quarter, and supervisors expect an inventory, risk ratings, documentation and monitoring. Every duplicate is one more thing to certify and watch."
+3. **What we have.** "The marketplace and Pantheon already certify assets without using AI to judge AI. Two gaps: people can't find what's certified, so they rebuild it. And an approval is just a status: nothing else can check it, and it doesn't notice when the code changes."
+4. **The idea.** "Two additions under one principle: AI reads, rules decide, people approve, evidence is automatic. Discover uses Jev. The Passport deliberately uses no AI."
+5. **Jev.** "Jev is a decision model: text in, numbers out, in one fast call. It doesn't write anything, so there's nothing invented to review, and every decision can be tested. It isn't the certifier: Pantheon and people are."
+6. **Demo steps.** Read them in one breath, then click **Start the demo**.
 
-### 0:30–1:00 · The idea
-**Show:** point at the three steps.
-**Say:** "Jev decides, code enforces, nothing generates. Jev answers eleven typed
-questions in one call and returns only numbers. Plain code applies our cutoffs, and a
-fixed template writes the handoff. No model writes any text, so there's nothing to
-hallucinate and every decision can be tested."
+### 1:30–2:10 · Discover: reuse
+**Click** "Reuse: invoice extraction".
+**Say:** "Someone needs invoice fields pulled from scanned PDFs. Jev matches Docvision and scores it as covering the need, so the verdict is reuse: no build, no new certification. Here's its SafeAI status, and the measured time and cost of that decision."
 
-### 1:00–1:40 · Reuse
-**Show:** click **Reuse: sprint notes**.
-**Say:** "Weekly sprint notes. Jev matches the WebEx Note Taker, look at the probability
-bars, and scores it fully covered. Verdict: reuse, no build. That's the reuse
-capability paying for itself."
-**Point at:** the metrics line: latency, tokens, cost.
+### 2:10–2:50 · Discover: the compliance catch
+**Click** "Extend: French emails".
+**Say:** "Extending EMMA to client-service emails. Jev classifies the data as restricted, but EMMA is only certified up to confidential. So reuse isn't automatic: a privacy review is attached, and the trace shows the number behind every rule."
+Optional, if time allows: drag **Review probability** until the verdict flips, then **Reset**. "Cutoffs are plain code that risk owns, not a prompt."
 
-### 1:40–2:30 · Extend, with a compliance catch
-**Show:** click **Extend: French emails**.
-**Say:** "French client-service emails. Jev matches Emma and says extend. But it also
-classifies the data as restricted, and Emma is only approved to confidential, so reuse
-isn't automatic. A privacy review is attached as a constraint."
-**Scroll to:** the handoff spec. "Requester's words verbatim, the routing decision, the
-constraints, a readiness checklist, and a decision record with the model and policy
-version. That's what Factory receives."
+### 2:50–4:20 · The Passport
+**Click** "Reuse: invoice extraction" again, then **View passport**.
+**Say:** "Docvision's SafeAI Passport: its version, certified commit, risk tier, data approval and every Pantheon check, signed by the marketplace. The signature is valid, it's in date, and the code matches what was certified. Any system with this public key can check it without calling us."
+**Click** "Tamper test: edit JSON", change `"risk_tier": "medium"` to `"low"`, **Verify**.
+**Say:** "Someone quietly downgrades the risk tier. The signature fails and nothing in it is trusted."
+**Click** **Reset**, then **Simulate new commit**.
+**Say:** "Now the team pushes new code. The passport is suspended automatically until the asset is re-certified. That's change management with proof attached."
 
-### 2:30–3:00 · Blocked
-**Show:** click **Blocked: credit model**.
-**Say:** "A credit limit recommender. Model risk probability is high, so it's blocked
-for model risk review before anything is built. That's OSFI E-23 territory, caught
-at intake instead of at deployment."
-**Point at:** the decision trace: "every rule, with the number that fired it."
-
-### 3:00–3:30 · The cutoff is ours, not the model's
-**Show:** scroll down slightly so the banner and the sliders are both on screen, drag **Review probability** up until the verdict flips, then **Reset**.
-**Say:** "These cutoffs are plain code. Moving one re-runs the policy on the same
-answers: no new Jev call, and it's labelled a what-if and not logged. Compliance owns
-this number, in a config file, not a prompt."
-
-### 3:30–4:15 · Evidence, not anecdotes
-**Show:** Evaluation tab.
-**Say:** "Twenty-three labelled requests covering every outcome. Review recall is ___
-against a 90% bar; for comparison, simple keyword rules get 61% of routes right. This
-chart re-runs the policy at every cutoff on the saved answers, so we choose the
-trade-off between missed reviews and false alarms with data, for free."
-**Point at:** one miss in the table, honestly: "This is where we'd refine the question wording."
-
-### 4:15–4:35 · Audit
-**Show:** Audit log tab.
-**Say:** "Every decision is logged with the model, the policy version and the answers.
-Just a hash of the request, never its text."
-
-### 4:35–5:00 · Close and ask
-**Say:** "Median ___ ms and $___ for all twenty-three calls. The same pattern works
-anywhere an agent harness makes a small decision: routing, safety gates, eval
-grading. It sits in front of Factory, not instead of it.
-Three asks: the real tools catalog and data classification; a vendor and model risk
-path for TypeSafe; and one team's intake queue for a pilot."
+### 4:20–5:00 · Close and ask
+**Say:** "Two pieces: Discover stops us rebuilding what's certified, and the Passport makes every certification provable and aware of change. Three asks: feed Pantheon's real results into passports; agree with the AI risk office who holds the signing key; and pilot with EMMA, Notetaker and Docvision listed with passports and Discover on the intake page. Discover would also need a vendor review of TypeSafe before real data touches it."
 
 ## Lines to avoid
 
 - Vendor claims like "200× cheaper": quote only the numbers measured on screen.
-- "Replaces Factory": it decides what Factory builds, and whether it's ready.
-- Anything implying real data was used: say "synthetic" at least once on camera.
+- "AI certifies the asset": Pantheon and people certify; Jev only reads the request.
+- Anything implying real data or real Pantheon results: say "synthetic" and "mocked" once.
