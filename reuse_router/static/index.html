@@ -102,12 +102,12 @@ button, input, textarea { font: inherit; color: inherit; }
 .card-head h2 { margin-bottom: 4px; }
 .hint { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
 .route-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-bottom: 40px; }
-@media (min-width: 1000px) { .route-grid { grid-template-columns: 380px minmax(0, 1fr); } .left { position: sticky; top: 12px; align-self: start; } }
+@media (min-width: 1000px) { .route-grid { grid-template-columns: 380px minmax(0, 1fr); } .left { position: sticky; top: 12px; align-self: start; max-height: calc(100vh - 24px); overflow-y: auto; } }
 
 /* Form */
 label.field { display: block; margin-bottom: 10px; font-size: 13px; color: var(--ink-2); }
 label.field input, label.field textarea { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--axis); border-radius: 8px; background: var(--raised); color: var(--ink); font-size: 14px; }
-label.field textarea { resize: vertical; min-height: 150px; line-height: 1.45; }
+label.field textarea { resize: vertical; min-height: 110px; line-height: 1.45; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .chip { border: 1px solid var(--axis); background: var(--raised); border-radius: 999px; padding: 3px 10px; font-size: 13px; cursor: pointer; color: var(--ink-2); }
 .chip:hover { color: var(--ink); border-color: var(--ink-2); }
@@ -118,10 +118,11 @@ label.field textarea { resize: vertical; min-height: 150px; line-height: 1.45; }
 .error { border-left: 4px solid var(--critical); background: var(--raised); padding: 8px 10px; border-radius: 6px; font-size: 13px; margin: 10px 0 0; }
 
 /* Sliders */
-.slider { margin-bottom: 10px; }
+#sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+.slider { min-width: 0; }
 .slider .row { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); }
 .slider .row output { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
-.slider .row output.changed::after { content: " (changed)"; font-weight: 400; color: var(--ink-2); }
+.slider .row output.changed { text-decoration: underline 2px; text-underline-offset: 3px; }
 .slider input { width: 100%; accent-color: var(--ink-2); }
 
 /* Result */
@@ -254,14 +255,14 @@ footer { color: var(--muted); font-size: 12px; padding: 24px 0 40px; }
             <label class="field">Title <input id="f-title" autocomplete="off"></label>
             <label class="field">Team <input id="f-team" autocomplete="off"></label>
             <label class="field">What should the tool do?
-              <textarea id="f-desc" rows="7" placeholder="Describe the tool: what it reads, what it produces, who uses it, and how you'll know it works."></textarea>
+              <textarea id="f-desc" rows="5" placeholder="Describe the tool: what it reads, what it produces, who uses it, and how you'll know it works."></textarea>
             </label>
             <button id="decide" class="primary">Decide</button>
             <p id="route-error" class="error" hidden></p>
           </div>
           <div class="card">
             <div class="card-head"><h2>Policy cutoffs</h2><button id="reset" class="ghost">Reset</button></div>
-            <p class="hint">Plain code, not the model. Moving a cutoff re-runs the policy on the same answers: no new Jev call, and not logged.</p>
+            <p class="hint">Plain code, not the model. Moving one re-runs the policy on the same answers: no new Jev call, not logged.</p>
             <div id="sliders"></div>
           </div>
         </aside>
@@ -367,12 +368,12 @@ const LABELS = {
   has_acceptance: "Testable acceptance criteria stated?",
 };
 const CUTOFF_LABELS = {
-  match_min_confidence: "Catalog match: min confidence",
-  reuse_min_fit: "Reuse: min fit (0–3)",
-  extend_min_fit: "Extend: min fit (0–3)",
-  review_min_p: "Reviews: min probability",
-  ready_min_score: "Readiness: min score (0–3)",
-  element_min_p: "Readiness elements: min probability",
+  match_min_confidence: "Match confidence",
+  reuse_min_fit: "Reuse fit (0–3)",
+  extend_min_fit: "Extend fit (0–3)",
+  review_min_p: "Review probability",
+  ready_min_score: "Ready score (0–3)",
+  element_min_p: "Element probability",
 };
 const STATUS = {
   READY_FOR_FACTORY: { icon: "✓", tone: "good", label: "Ready for Factory", text: "No blocking reviews and the request is specific enough. The handoff spec below can go to Factory." },
@@ -466,10 +467,13 @@ function scheduleReapply() {
   reapplyTimer = setTimeout(reapply, 120);
 }
 
+let reapplySeq = 0;
 async function reapply() {
   const r = S.result;
+  const seq = ++reapplySeq;
   try {
     const out = await api("/api/reapply", { request: r.request, answers: r.answers, model: r.model, cutoffs: changedCutoffs() });
+    if (seq !== reapplySeq || S.result !== r) return; // superseded by a newer move or decision
     S.result = { ...r, ...out };
     S.whatIf = JSON.stringify(changedCutoffs()) !== S.result.decidedCutoffs;
     renderResult();
@@ -595,7 +599,9 @@ function meter(fraction, ticks) {
     h("div", { class: "meter", role: "img", "aria-label": `${pct(fraction)}` },
       h("div", { class: "fill", style: `width:${Math.max(0, Math.min(1, fraction)) * 100}%` }),
       ...ticks.map(([, at]) => h("div", { class: "tick", style: `left:calc(${at * 100}% - 1px)` }))),
-    h("div", { class: "ticklabels" }, ticks.map(([label, at]) => h("span", { style: `left:${at * 100}%` }, label))),
+    h("div", { class: "ticklabels" }, ticks.map(([label, at]) => h("span", {
+      style: `left:${at * 100}%;transform:translateX(${at > 0.85 ? "-100%" : at < 0.15 ? "0" : "-50%"})`,
+    }, label))),
   ];
 }
 

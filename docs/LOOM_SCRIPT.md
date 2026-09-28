@@ -69,7 +69,7 @@ at intake instead of at deployment."
 **Point at:** the decision trace: "every rule, with the number that fired it."
 
 ### 3:00–3:30 · The cutoff is ours, not the model's
-**Show:** drag **Reviews: min probability** up until the verdict flips, then **Reset**.
+**Show:** scroll down slightly so the banner and the sliders are both on screen, drag **Review probability** up until the verdict flips, then **Reset**.
 **Say:** "These cutoffs are plain code. Moving one re-runs the policy on the same
 answers: no new Jev call, and it's labelled a what-if and not logged. Compliance owns
 this number, in a config file, not a prompt."
