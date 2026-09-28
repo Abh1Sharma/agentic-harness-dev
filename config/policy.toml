@@ -1,0 +1,30 @@
+# Policy cutoffs. These are data, not code: change them here and the verdicts
+# change, with no re-prompting. Every audit log entry records the values used.
+# Tune them with the eval (python -m reuse_router.evaluate).
+
+[route]
+# Minimum confidence in the catalog match before we trust it enough to reuse or extend.
+match_min_confidence = 0.55
+# reuse_fit is an expected score from 0 (not covered) to 3 (fully covered).
+reuse_min_fit = 2.5
+extend_min_fit = 1.5
+
+[reviews]
+# Probability at or above which a yes/no answer triggers the review.
+review_min_p = 0.50
+# Data classes that trigger a privacy review on their own.
+sensitive_classes = ["confidential", "restricted"]
+# Reviews that must finish before a spec goes to Factory.
+blocking = ["model_risk", "third_party"]
+
+[readiness]
+# spec_readiness is an expected score from 0 (vague idea) to 3 (fully specified).
+ready_min_score = 2.0
+# Probability at or above which a has_* element counts as present.
+element_min_p = 0.50
+
+[pricing]
+# USD per million tokens, used only to show an estimated cost per call.
+# Check against your TypeSafe console; these are not quoted as vendor claims.
+input_per_million = 0.042
+output_per_million = 0.0  # unknown: set from your console if TypeSafe bills output tokens

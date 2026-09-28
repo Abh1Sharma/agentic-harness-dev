@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets: never commit keys
+.env
+
+# Generated at runtime
+data/audit.jsonl
+data/eval_results.json
