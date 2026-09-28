@@ -11,17 +11,20 @@ replayable offline.
 
 import argparse
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
 from reuse_router.engine import Engine, make_engine
 from reuse_router.models import Request
+from reuse_router.paths import DATA_DIR, runtime_dir
 from reuse_router.pipeline import RouteResult, estimate_cost, route_request
 from reuse_router.policy import Policy, evaluate
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 EVAL_SET_PATH = DATA_DIR / "eval_set.jsonl"
-RESULTS_PATH = DATA_DIR / "eval_results.json"
+RESULTS_PATH = runtime_dir() / "eval_results.json"
+# Jev calls run in parallel so a full eval fits inside a serverless request.
+EVAL_WORKERS = 6
 REVIEWS = ("privacy", "model_risk", "third_party")
 SWEEP_CUTOFFS = [round(0.1 * i, 1) for i in range(1, 10)]
 RECALL_BAR = 0.9
@@ -86,19 +89,24 @@ def sweep(rows: list[dict], results: list[RouteResult], policy: Policy) -> list[
 def run(engine: Engine, policy: Policy | None = None, eval_set: list[dict] | None = None) -> dict:
     policy = policy or Policy.load()
     items = eval_set if eval_set is not None else load_eval_set()
-    rows, results = [], []
-    for item in items:
+
+    def route_item(item: dict) -> RouteResult:
         request = Request(description=item["description"], title=item.get("title", ""), team=item.get("team", ""))
-        result = route_request(request, engine, policy, audit_path=None)
-        results.append(result)
-        rows.append({
+        return route_request(request, engine, policy, audit_path=None)
+
+    with ThreadPoolExecutor(max_workers=EVAL_WORKERS) as pool:
+        results = list(pool.map(route_item, items))  # map keeps the eval set's order
+    rows = [
+        {
             "id": item["id"],
             "title": item.get("title", ""),
             "expected": {**item["expected"], "reviews": sorted(item["expected"]["reviews"])},
             "predicted": _predicted(result.decision.verdict),
             "latency_ms": result.engine.latency_ms,
             "input_tokens": result.engine.input_tokens,
-        })
+        }
+        for item, result in zip(items, results)
+    ]
 
     costs = [estimate_cost(result.engine) for result in results]
     latencies = sorted(row["latency_ms"] for row in rows)
@@ -128,6 +136,7 @@ def main() -> None:
     args = parser.parse_args()
 
     report = run(make_engine(args.mode))
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     RESULTS_PATH.write_text(json.dumps(report, indent=2))
 
     metrics = report["metrics"]
@@ -150,7 +159,7 @@ def main() -> None:
             wrong = [k for k in row["expected"] if row["predicted"][k] != row["expected"][k]]
             print(f"  {row['id']} {row['title']}: " + "; ".join(
                 f"{k} expected {row['expected'][k]} got {row['predicted'][k]}" for k in wrong))
-    print(f"\nWrote {RESULTS_PATH.relative_to(DATA_DIR.parent)}")
+    print(f"\nWrote {RESULTS_PATH}")
 
 
 if __name__ == "__main__":

@@ -9,7 +9,9 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-AUDIT_PATH = Path(__file__).resolve().parent.parent / "data" / "audit.jsonl"
+from reuse_router.paths import runtime_dir
+
+AUDIT_PATH = runtime_dir() / "audit.jsonl"
 
 
 def append(entry: dict, path: Path = AUDIT_PATH) -> None:

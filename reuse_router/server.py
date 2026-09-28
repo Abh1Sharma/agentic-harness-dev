@@ -4,13 +4,18 @@
     uv run --env-file .env python -m reuse_router.server    # with a key in .env
 """
 
+import asyncio
+import hashlib
+import hmac
 import json
 import os
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import Request as HttpRequest
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
 from reuse_router import audit, evaluate, passport
@@ -44,8 +49,33 @@ CUTOFF_RANGES = {
     "element_min_p": (0.0, 1.0, 0.05),
 }
 
-app = FastAPI(title="Reuse Router")
+app = FastAPI(title="SafeAI Marketplace")
 _engine: Engine | None = None
+
+# Password gate: on when DEMO_PASSWORD is set (e.g. on Vercel), off for local runs.
+AUTH_COOKIE = "safeai_demo"
+PUBLIC_PATHS = {"/login", "/api/login"}
+
+
+def _demo_password() -> str:
+    return os.environ.get("DEMO_PASSWORD", "")
+
+
+def _session_token(password: str) -> str:
+    """Derived from the password, so the cookie never contains the password itself."""
+    return hmac.new(password.encode(), b"safeai-demo-session", hashlib.sha256).hexdigest()
+
+
+@app.middleware("http")
+async def password_gate(request: HttpRequest, call_next):
+    password = _demo_password()
+    if not password or request.url.path in PUBLIC_PATHS:
+        return await call_next(request)
+    if hmac.compare_digest(request.cookies.get(AUTH_COOKIE, ""), _session_token(password)):
+        return await call_next(request)
+    if request.url.path.startswith("/api/"):
+        return JSONResponse(status_code=401, content={"detail": "Sign in first."})
+    return RedirectResponse(f"/login?next={quote(request.url.path)}", status_code=303)
 
 
 def get_engine() -> Engine:
@@ -84,6 +114,28 @@ def _policy(cutoffs: dict[str, float] | None) -> Policy:
 
 def _request(body: RouteBody) -> Request:
     return Request(description=body.description.strip(), title=body.title.strip(), team=body.team.strip())
+
+
+class LoginBody(BaseModel):
+    password: str = Field(max_length=200)
+
+
+@app.get("/login")
+def login_page() -> FileResponse:
+    return FileResponse(STATIC_DIR / "login.html")
+
+
+@app.post("/api/login")
+async def login(body: LoginBody, request: HttpRequest) -> JSONResponse:
+    password = _demo_password()
+    if not password or not hmac.compare_digest(body.password.encode(), password.encode()):
+        await asyncio.sleep(0.5)  # slows password guessing
+        return JSONResponse(status_code=401, content={"detail": "Wrong password."})
+    response = JSONResponse({"ok": True})
+    https = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    response.set_cookie(AUTH_COOKIE, _session_token(password), max_age=7 * 24 * 3600,
+                        httponly=True, samesite="lax", secure=https)
+    return response
 
 
 @app.get("/")
@@ -144,6 +196,7 @@ def eval_results() -> dict:
 @app.post("/api/eval/run")
 def eval_run() -> dict:
     report = evaluate.run(get_engine())
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     RESULTS_PATH.write_text(json.dumps(report, indent=2))
     return {"available": True, **report}
 

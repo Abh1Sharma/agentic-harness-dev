@@ -25,8 +25,11 @@ from reuse_router.models import (
     answers_from_dict,
     answers_to_dict,
 )
+from reuse_router.paths import DATA_DIR, runtime_dir
 
-RECORDINGS_DIR = Path(__file__).resolve().parent.parent / "data" / "recordings"
+# Replay reads committed recordings; live mode writes wherever runtime files may go.
+RECORDINGS_DIR = DATA_DIR / "recordings"
+LIVE_RECORDINGS_DIR = runtime_dir() / "recordings"
 DEFAULT_MODEL = "jev-latest"
 
 
@@ -59,7 +62,7 @@ def _check_complete(answers: Answers, questions: dict[str, dict]) -> None:
 class LiveEngine:
     mode = "live"
 
-    def __init__(self, recordings_dir: Path = RECORDINGS_DIR, client=None):
+    def __init__(self, recordings_dir: Path = LIVE_RECORDINGS_DIR, client=None):
         # Imported here so sim and replay modes work even if the SDK is broken or absent.
         from typesafe_sdk import TypeSafeClient, TypeSafeError
 

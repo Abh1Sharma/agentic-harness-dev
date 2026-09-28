@@ -1,0 +1,6 @@
+.venv
+.pytest_cache
+**/__pycache__
+data/audit.jsonl
+data/eval_results.json
+.env

@@ -12,6 +12,7 @@ REQUEST = {
 
 @pytest.fixture
 def client(monkeypatch, tmp_path):
+    monkeypatch.delenv("DEMO_PASSWORD", raising=False)
     monkeypatch.setattr(server, "_engine", SimEngine())
     monkeypatch.setattr(server, "AUDIT_PATH", tmp_path / "audit.jsonl")
     monkeypatch.setattr(server, "RESULTS_PATH", tmp_path / "eval_results.json")
@@ -69,3 +70,27 @@ def test_verify_detects_tampering_and_new_commits(client):
     moved = client.post("/api/passports/verify", json={"passport": item["passport"], "current_commit": "f" * 40})
     assert moved.json()["status"] == "SUSPENDED"
     assert client.post("/api/passports/verify", json={"passport": "not json"}).json()["status"] == "TAMPERED"
+
+
+def test_password_gate(client, monkeypatch):
+    monkeypatch.setenv("DEMO_PASSWORD", "open-sesame")
+    page = client.get("/app", follow_redirects=False)
+    assert page.status_code == 303 and page.headers["location"] == "/login?next=/app"
+    assert client.get("/api/meta").status_code == 401
+    assert client.get("/login").status_code == 200
+
+    assert client.post("/api/login", json={"password": "wrong"}).status_code == 401
+    ok = client.post("/api/login", json={"password": "open-sesame"})
+    assert ok.status_code == 200
+    assert "open-sesame" not in ok.headers["set-cookie"]  # cookie holds a derived token only
+    assert client.get("/api/meta").status_code == 200  # TestClient keeps the cookie
+
+
+def test_runtime_files_move_to_tmp_on_vercel(monkeypatch):
+    from reuse_router.paths import DATA_DIR, runtime_dir
+
+    monkeypatch.delenv("RUNTIME_DIR", raising=False)
+    monkeypatch.delenv("VERCEL", raising=False)
+    assert runtime_dir() == DATA_DIR
+    monkeypatch.setenv("VERCEL", "1")
+    assert str(runtime_dir()).startswith("/tmp/")
